@@ -1,8 +1,11 @@
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-brapp-change-in-production-xyz123'
-DEBUG = True
+
+
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
