@@ -1,102 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}About Us{% endblock %}
 {% block page_title %}About{% endblock %}
-{% block pub_content %}
-{% load static %}
 
-<!-- Hero -->
-<div style="text-align:center;padding:48px 20px 36px;border-bottom:1px solid var(--dark3);margin-bottom:40px;">
-    <img src="{% static 'images/bralogo.jpg' %}" alt="BRA Logo"
-         style="width:100px;filter:drop-shadow(0 0 24px rgba(232,168,0,.4));margin-bottom:20px;">
-    <h1 style="font-family:'Cinzel',serif;font-size:clamp(1.8rem,5vw,3rem);color:var(--gold);letter-spacing:3px;margin-bottom:12px;">
-        Beeston Rylands Archers
-    </h1>
-    <p style="color:var(--text-muted);font-size:clamp(.9rem,2.5vw,1.1rem);max-width:600px;margin:0 auto;line-height:1.7;">
-        A friendly archery club welcoming archers of all abilities, from complete beginners
-        to experienced competitive shooters.
-    </p>
-    <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="{% url 'course_list' %}" class="btn btn-gold">View Our Courses</a>
-        <a href="{% url 'contact' %}" class="btn btn-outline">Get In Touch</a>
-    </div>
-</div>
-
-<!-- Cards -->
-<div class="grid grid-3" style="margin-bottom:40px;">
-    <div class="card" style="text-align:center;border-top:3px solid var(--gold);">
-        <div style="font-size:2.5rem;margin-bottom:12px;">🏹</div>
-        <div style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:8px;">Outdoor &amp; Indoor</div>
-        <p style="color:var(--text-muted);font-size:.88rem;line-height:1.6;">
-            We shoot year-round — outdoors on our field from spring to autumn,
-            and indoors at our heated facility through the winter months.
-        </p>
-    </div>
-    <div class="card" style="text-align:center;border-top:3px solid var(--gold);">
-        <div style="font-size:2.5rem;margin-bottom:12px;">🎯</div>
-        <div style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:8px;">All Bow Styles</div>
-        <p style="color:var(--text-muted);font-size:.88rem;line-height:1.6;">
-            Members shoot Recurve, Compound, Barebow, Longbow and more.
-            Our coaches can help you find the style that suits you best.
-        </p>
-    </div>
-    <div class="card" style="text-align:center;border-top:3px solid var(--gold);">
-        <div style="font-size:2.5rem;margin-bottom:12px;">🏆</div>
-        <div style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:8px;">Competitive &amp; Social</div>
-        <p style="color:var(--text-muted);font-size:.88rem;line-height:1.6;">
-            From club shoots and county championships to casual social evenings,
-            there's something for everyone at Beeston Rylands Archers.
-        </p>
-    </div>
-</div>
-
-<!-- Who we are -->
-<div class="card" style="margin-bottom:28px;">
-    <div class="card-header">Who We Are</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
-        <div>
-            <p style="color:var(--text-muted);line-height:1.8;font-size:.93rem;margin-bottom:14px;">
-                Founded in the heart of the community, the Beeston Rylands Archers has been
-                bringing people together through the sport of archery for decades.
-                Our club prides itself on being welcoming, inclusive and passionate about the sport.
-            </p>
-            <p style="color:var(--text-muted);line-height:1.8;font-size:.93rem;">
-                We are affiliated with <strong style="color:var(--white);">Archery GB</strong> and follow their
-                rules and safety guidelines. All our coaches hold recognised qualifications and our
-                facilities are regularly inspected.
-            </p>
-        </div>
-        <div>
-            <div style="background:var(--dark2);border:1px solid var(--dark3);border-radius:8px;padding:20px;">
-                <div style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:14px;font-size:.95rem;">Club Facts</div>
-                <table style="width:100%;font-size:.88rem;">
-                    <tr style="border-bottom:1px solid var(--dark3);">
-                        <td style="color:var(--text-muted);padding:8px 0;">Meeting Nights</td>
-                        <td style="color:var(--white);text-align:right;">Tuesday &amp; Thursday</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--dark3);">
-                        <td style="color:var(--text-muted);padding:8px 0;">Weekend Sessions</td>
-                        <td style="color:var(--white);text-align:right;">Sunday mornings</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--dark3);">
-                        <td style="color:var(--text-muted);padding:8px 0;">Bow Styles</td>
-                        <td style="color:var(--white);text-align:right;">All welcome</td>
-                    </tr>
-                    <tr>
-                        <td style="color:var(--text-muted);padding:8px 0;">Membership</td>
-                        <td style="color:var(--white);text-align:right;">Open year-round</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- CTA -->
-<div style="text-align:center;padding:36px 20px;background:var(--dark);border:1px solid var(--dark3);border-radius:8px;border-top:3px solid var(--gold);">
-    <h3 style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:10px;font-size:1.2rem;">Ready to pick up a bow?</h3>
-    <p style="color:var(--text-muted);margin-bottom:20px;font-size:.9rem;">
-        Our beginner courses are the perfect way to try archery with no prior experience needed.
-    </p>
-    <a href="{% url 'course_list' %}" class="btn btn-gold">See Beginner Courses</a>
-</div>
+{% block topbar_actions %}
+{% if request.user.is_admin %}
+<a href="{% url 'about_edit' %}" class="btn btn-gold btn-sm">✏️ Edit Page</a>
+{% endif %}
 {% endblock %}
+
+{% block pub_content %}{% include 'pages/_about_body.html' %}{% endblock %}
+{% block content %}{% include 'pages/_about_body.html' %}{% endblock %}

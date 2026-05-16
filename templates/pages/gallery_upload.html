@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Upload Photo{% endblock %}
+{% block page_title %}Upload Photo{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'gallery' %}" class="btn btn-outline btn-sm">← Gallery</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:540px;">
+    <div class="card">
+        <div class="card-header">Add Gallery Photo</div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ field.errors }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <div style="display:flex;gap:10px;">
+                <button type="submit" class="btn btn-gold">Upload Photo</button>
+                <a href="{% url 'gallery' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

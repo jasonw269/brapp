@@ -1,0 +1,82 @@
+{% load static %}
+<style>
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.gallery-item{position:relative;border-radius:8px;overflow:hidden;background:var(--dark2);border:1px solid var(--dark3);aspect-ratio:4/3;cursor:pointer;}
+.gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease;}
+.gallery-item:hover img{transform:scale(1.06);}
+.gallery-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.85));padding:20px 14px 12px;transform:translateY(100%);transition:transform .25s ease;}
+.gallery-item:hover .gallery-caption{transform:translateY(0);}
+.gallery-caption-title{font-weight:700;font-size:.88rem;color:var(--white);}
+.gallery-caption-desc{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+.gallery-admin-bar{position:absolute;top:8px;right:8px;display:flex;gap:6px;opacity:0;transition:opacity .2s;}
+.gallery-item:hover .gallery-admin-bar{opacity:1;}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:92vw;max-height:86vh;object-fit:contain;border-radius:4px;box-shadow:0 0 60px rgba(232,168,0,.15);}
+.lb-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--white);font-size:2rem;cursor:pointer;line-height:1;}
+.lb-caption{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);text-align:center;color:var(--white);white-space:nowrap;}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);border:none;color:var(--gold);font-size:2.5rem;cursor:pointer;padding:10px 16px;border-radius:4px;line-height:1;}
+#lb-prev{left:12px;} #lb-next{right:12px;}
+</style>
+
+{% if request.user.is_admin %}
+<div style="background:rgba(232,168,0,.08);border:1px solid rgba(232,168,0,.3);border-radius:6px;padding:10px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <span style="font-size:.85rem;color:var(--gold);">⚙️ Admin — hover over photos to delete</span>
+    <a href="{% url 'gallery_upload' %}" class="btn btn-gold btn-sm">+ Upload Photo</a>
+</div>
+{% endif %}
+
+<div style="margin-bottom:24px;">
+    <h1 style="font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2rem);color:var(--gold);margin-bottom:6px;">Photo Gallery</h1>
+    <p style="color:var(--text-muted);">A glimpse of life at the club — shoots, events and our members in action.</p>
+</div>
+
+{% if images %}
+<div class="gallery-grid" id="galleryGrid">
+    {% for img in images %}
+    <div class="gallery-item">
+        <img src="{{ img.image.url }}" alt="{{ img.title }}" loading="lazy" onclick="openLightbox({{ forloop.counter0 }})">
+        <div class="gallery-caption" onclick="openLightbox({{ forloop.counter0 }})">
+            <div class="gallery-caption-title">{{ img.title }}</div>
+            {% if img.description %}<div class="gallery-caption-desc">{{ img.description }}</div>{% endif %}
+        </div>
+        {% if request.user.is_admin %}
+        <div class="gallery-admin-bar">
+            <form method="post" action="{% url 'gallery_delete' img.pk %}" onsubmit="return confirm('Delete this photo?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm" style="font-size:.7rem;padding:4px 8px;">🗑 Delete</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="lightbox" id="lightbox">
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+    <button class="lb-nav" id="lb-prev" onclick="changeImage(-1)">‹</button>
+    <img id="lb-img" src="" alt="">
+    <button class="lb-nav" id="lb-next" onclick="changeImage(1)">›</button>
+    <div class="lb-caption" id="lb-caption"></div>
+</div>
+
+{% else %}
+<div style="text-align:center;padding:80px 20px;">
+    <div style="font-size:3rem;margin-bottom:16px;">📷</div>
+    <p style="color:var(--text-muted);">No photos uploaded yet.</p>
+    {% if request.user.is_admin %}
+    <a href="{% url 'gallery_upload' %}" class="btn btn-gold" style="margin-top:16px;">Upload First Photo</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+const images=[{% for img in images %}{"src":"{{ img.image.url }}","title":"{{ img.title|escapejs }}","desc":"{{ img.description|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}];
+let current=0;
+function openLightbox(idx){current=idx;updateLightbox();document.getElementById('lightbox').classList.add('open');document.body.style.overflow='hidden';}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';}
+function changeImage(dir){current=(current+dir+images.length)%images.length;updateLightbox();}
+function updateLightbox(){const i=images[current];document.getElementById('lb-img').src=i.src;document.getElementById('lb-img').alt=i.title;document.getElementById('lb-caption').innerHTML='<strong>'+i.title+'</strong>'+(i.desc?'<br><span style="color:var(--text-muted);font-size:.82rem;">'+i.desc+'</span>':'');}
+document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox();});
+document.addEventListener('keydown',function(e){if(!document.getElementById('lightbox').classList.contains('open'))return;if(e.key==='Escape')closeLightbox();if(e.key==='ArrowLeft')changeImage(-1);if(e.key==='ArrowRight')changeImage(1);});
+</script>

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Edit About Page{% endblock %}
+{% block page_title %}Edit About Page{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'about' %}" class="btn btn-outline btn-sm">← View Page</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:800px;">
+    <div class="card">
+        <div class="card-header">About Page Content</div>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ field.errors }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button type="submit" class="btn btn-gold">Save Changes</button>
+                <a href="{% url 'about' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

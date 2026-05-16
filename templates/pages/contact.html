@@ -1,122 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}Contact Us{% endblock %}
 {% block page_title %}Contact{% endblock %}
-{% block pub_content %}
 
-<div style="max-width:800px;margin:0 auto;">
-    <h1 style="font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2rem);color:var(--gold);margin-bottom:8px;">Get In Touch</h1>
-    <p style="color:var(--text-muted);margin-bottom:32px;line-height:1.7;">
-        We'd love to hear from you. Whether you're interested in joining, have a question about courses,
-        or just want to know more about the club, drop us a message.
-    </p>
-
-    <div class="grid grid-2" style="margin-bottom:28px;">
-        <!-- Contact details -->
-        <div>
-            <div class="card" style="height:100%;">
-                <div class="card-header">Club Details</div>
-
-                <div style="display:flex;gap:14px;align-items:start;margin-bottom:18px;">
-                    <span style="font-size:1.4rem;flex-shrink:0;">📍</span>
-                    <div>
-                        <div style="font-weight:700;color:var(--white);margin-bottom:3px;">Club Ground</div>
-                        <div style="color:var(--text-muted);font-size:.88rem;line-height:1.6;">
-                            123 Archer Lane<br>
-                            Greenfield<br>
-                            AB12 3CD
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display:flex;gap:14px;align-items:start;margin-bottom:18px;">
-                    <span style="font-size:1.4rem;flex-shrink:0;">✉️</span>
-                    <div>
-                        <div style="font-weight:700;color:var(--white);margin-bottom:3px;">Email</div>
-                        <a href="mailto:info@bra-archery.co.uk" style="color:var(--gold);text-decoration:none;font-size:.88rem;">
-                            info@bra-archery.co.uk
-                        </a>
-                    </div>
-                </div>
-
-                <div style="display:flex;gap:14px;align-items:start;margin-bottom:18px;">
-                    <span style="font-size:1.4rem;flex-shrink:0;">🕐</span>
-                    <div>
-                        <div style="font-weight:700;color:var(--white);margin-bottom:6px;">Shooting Times</div>
-                        <table style="font-size:.85rem;width:100%;">
-                            <tr><td style="color:var(--text-muted);padding:3px 0;">Tuesday</td><td style="color:var(--white);text-align:right;">18:30 – 21:00</td></tr>
-                            <tr><td style="color:var(--text-muted);padding:3px 0;">Thursday</td><td style="color:var(--white);text-align:right;">18:30 – 21:00</td></tr>
-                            <tr><td style="color:var(--text-muted);padding:3px 0;">Sunday</td><td style="color:var(--white);text-align:right;">09:30 – 12:30</td></tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="display:flex;gap:14px;align-items:start;">
-                    <span style="font-size:1.4rem;flex-shrink:0;">📱</span>
-                    <div>
-                        <div style="font-weight:700;color:var(--white);margin-bottom:3px;">Social Media</div>
-                        <div style="font-size:.88rem;color:var(--text-muted);">Find us on Facebook and Instagram<br>@BRAArchery</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact form -->
-        <div class="card">
-            <div class="card-header">Send Us a Message</div>
-            {% if sent %}
-            <div class="alert alert-success">✓ Message sent! We'll be in touch soon.</div>
-            {% else %}
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label">Your Name</label>
-                    <input type="text" name="name" class="form-control" placeholder="Jane Smith" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-control" placeholder="jane@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Subject</label>
-                    <select name="subject" class="form-select">
-                        <option>General Enquiry</option>
-                        <option>Beginner Courses</option>
-                        <option>Membership</option>
-                        <option>Visiting the Club</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Message</label>
-                    <textarea name="message" class="form-control" rows="5" placeholder="How can we help?" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-gold" style="width:100%;">Send Message</button>
-            </form>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Map placeholder -->
-    <div style="background:var(--dark);border:1px solid var(--dark3);border-radius:8px;overflow:hidden;">
-        <div style="padding:14px 20px;border-bottom:1px solid var(--dark3);font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold);">📍 Find Us</div>
-        <div style="height:200px;display:flex;align-items:center;justify-content:center;background:var(--dark2);color:var(--text-muted);font-size:.85rem;flex-direction:column;gap:8px;">
-            <span style="font-size:2rem;">🗺️</span>
-            <span>123 Archer Lane, Greenfield, AB12 3CD</span>
-            <a href="https://maps.google.com" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open in Google Maps</a>
-        </div>
-    </div>
-</div>
+{% block topbar_actions %}
+{% if request.user.is_admin %}
+<a href="{% url 'contact_edit' %}" class="btn btn-gold btn-sm">✏️ Edit Page</a>
+{% endif %}
 {% endblock %}
 
-{% block extra_js %}
-<script>
-// Simple contact form handler — replace with email backend in production
-const form = document.querySelector('form');
-if (form) {
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        form.innerHTML = '<div class="alert alert-success">✓ Message sent! We\'ll be in touch soon.</div>';
-    });
-}
-</script>
-{% endblock %}
+{% block pub_content %}{% include 'pages/_contact_body.html' %}{% endblock %}
+{% block content %}{% include 'pages/_contact_body.html' %}{% endblock %}
