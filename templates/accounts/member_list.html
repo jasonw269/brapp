@@ -2,11 +2,17 @@
 {% block title %}Members{% endblock %}
 {% block page_title %}Members{% endblock %}
 {% block topbar_actions %}
-{% if request.user.is_admin %}<a href="/admin/accounts/user/add/" class="btn btn-gold btn-sm">+ Add Member</a>{% endif %}
+{% if request.user.is_admin %}
+<a href="{% url 'user_list_admin' %}" class="btn btn-outline btn-sm">👥 All Users</a>
+{% endif %}
+{% if request.user.is_admin or request.user.committee_role in 'Chair,Treasurer,Secretary,Member' %}
+<a href="{% url 'membership_create' %}" class="btn btn-gold btn-sm">+ Membership</a>
+{% endif %}
 {% endblock %}
 {% block content %}
 <div class="card">
     <div class="card-header">Club Members</div>
+    <div class="table-wrap">
     <table class="table">
         <thead><tr><th>Name</th><th>Role</th><th>Membership</th><th>Actions</th></tr></thead>
         <tbody>
@@ -14,29 +20,39 @@
         <tr>
             <td>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:32px;height:32px;border-radius:50%;background:var(--gold-dark);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:var(--black);font-size:.8rem;overflow:hidden;flex-shrink:0;">
+                    <div style="width:32px;height:32px;border-radius:50%;background:var(--gold-dark);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:var(--black);font-size:.75rem;flex-shrink:0;overflow:hidden;">
                         {% if member.profile.photo %}<img src="{{ member.profile.photo.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ member.first_name|first|upper }}{{ member.last_name|first|upper }}{% endif %}
                     </div>
                     {{ member.get_full_name|default:member.username }}
                 </div>
             </td>
-            <td><span class="badge-pill badge-gold">{{ member.committee_role|default:member.role }}</span></td>
+            <td>
+                <span class="badge-pill badge-gold">{{ member.committee_role|default:member.role }}</span>
+            </td>
             <td>
                 {% with m=member.memberships.first %}
-                {% if m and m.is_active %}<span class="badge-pill badge-success">Active</span> {{ m.level }}
+                {% if m and m.is_active %}<span class="badge-pill badge-success">Active</span> <span style="font-size:.82rem;color:var(--text-muted);">{{ m.level }} · expires {{ m.end_date|date:"j M Y" }}</span>
                 {% elif m %}<span class="badge-pill badge-danger">Expired</span>
                 {% else %}<span class="badge-pill badge-muted">None</span>{% endif %}
                 {% endwith %}
             </td>
             <td>
-                <a href="{% url 'member_profile' member.pk %}" class="btn btn-outline btn-sm">Profile</a>
-                {% if request.user.is_admin or request.user.committee_role == 'Member' %}
-                <a href="{% url 'membership_create_for' member.pk %}" class="btn btn-outline btn-sm">+ Membership</a>
-                {% endif %}
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <a href="{% url 'member_profile' member.pk %}" class="btn btn-outline btn-sm">Profile</a>
+                    {% if request.user.is_admin or request.user.committee_role in 'Chair,Treasurer,Secretary,Member,Records' %}
+                    <a href="{% url 'membership_create_for' member.pk %}" class="btn btn-gold btn-sm">+ Membership</a>
+                    {% endif %}
+                    {% if request.user.is_admin %}
+                    <a href="{% url 'user_role_edit' member.pk %}" class="btn btn-outline btn-sm">✏️ Roles</a>
+                    {% endif %}
+                </div>
             </td>
         </tr>
+        {% empty %}
+        <tr><td colspan="4" style="color:var(--text-muted);">No members found.</td></tr>
         {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}

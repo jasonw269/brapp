@@ -308,6 +308,7 @@
 
         {% if user.is_admin %}
         <div class="nav-section">Admin</div>
+        <a href="{% url 'user_list_admin' %}" class="nav-link"><span class="nav-icon">👥</span> User Management</a>
         <a href="/admin/" class="nav-link"><span class="nav-icon">🔧</span> Site Admin</a>
         {% endif %}
     </nav>
