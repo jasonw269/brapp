@@ -4,6 +4,7 @@
 {% block topbar_actions %}
 {% if request.user.is_admin %}
 <a href="{% url 'user_list_admin' %}" class="btn btn-outline btn-sm">👥 All Users</a>
+<a href="{% url 'user_create' %}" class="btn btn-gold btn-sm">+ Add User</a>
 {% endif %}
 {% if request.user.is_admin or request.user.committee_role in 'Chair,Treasurer,Secretary,Member' %}
 <a href="{% url 'membership_create' %}" class="btn btn-gold btn-sm">+ Membership</a>
