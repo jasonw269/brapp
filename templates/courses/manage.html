@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Manage Courses{% endblock %}
+{% block page_title %}Course Management{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'course_create' %}" class="btn btn-gold btn-sm">+ Create Course</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="table-wrap">
+    <table class="table">
+        <thead><tr><th>Title</th><th>Start</th><th>Max</th><th>Price</th><th>Applications</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for course in courses %}
+        <tr>
+            <td><strong>{{ course.title }}</strong></td>
+            <td style="white-space:nowrap;">{{ course.start_date|date:"j M Y" }}</td>
+            <td>{{ course.max_participants }}</td>
+            <td>{% if course.price == 0 %}<span class="badge-pill badge-success">Free</span>{% else %}£{{ course.price }}{% endif %}</td>
+            <td>{{ course.applications.count }}</td>
+            <td><span class="badge-pill {% if course.status == 'open' %}badge-success{% else %}badge-muted{% endif %}">{{ course.get_status_display }}</span></td>
+            <td><a href="{% url 'course_applications' course.pk %}" class="btn btn-outline btn-sm">Applications</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="color:var(--text-muted);">No courses created.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

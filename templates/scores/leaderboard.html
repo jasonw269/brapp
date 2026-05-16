@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard{% endblock %}
+{% block page_title %}🏆 Leaderboard{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+    <form method="get" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;flex:1;min-width:200px;">
+            <label class="form-label">Round</label>
+            <select name="round" class="form-select">
+                <option value="">— Select Round —</option>
+                {% for round in rounds %}
+                <option value="{{ round.pk }}" {% if selected_round and selected_round.pk == round.pk %}selected{% endif %}>{{ round.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:200px;">
+            <label class="form-label">Bow Type</label>
+            <select name="bow" class="form-select">
+                <option value="">All Bow Types</option>
+                {% for val, label in bow_choices %}
+                <option value="{{ val }}" {% if selected_bow == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-gold" style="margin-bottom:0;">Filter</button>
+    </form>
+</div>
+
+{% if selected_round %}
+<div class="card">
+    <div class="card-header">
+        {{ selected_round.name }} — {{ selected_bow|default:'All Bows' }}
+        <div style="font-size:.8rem;color:var(--text-muted);">{{ selected_round.number_of_arrows }} arrows | Max: {{ selected_round.maximum_score }} | {{ selected_round.get_system_display }}</div>
+    </div>
+    <table class="table">
+        <thead><tr><th>#</th><th>Archer</th><th>Bow Type</th><th>Score</th><th>Max</th><th>%</th><th>Date</th></tr></thead>
+        <tbody>
+        {% for score in leaderboard_data %}
+        <tr {% if forloop.counter == 1 %}style="background:rgba(232,168,0,0.05);"{% endif %}>
+            <td>
+                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+            </td>
+            <td>
+                <a href="{% url 'member_profile' score.user.pk %}" style="color:var(--gold);text-decoration:none;">
+                    {{ score.user.get_full_name|default:score.user.username }}
+                </a>
+            </td>
+            <td><span class="badge-pill badge-muted">{{ score.bow_type }}</span></td>
+            <td style="font-weight:700;font-size:1.1rem;color:{% if forloop.counter == 1 %}var(--gold){% else %}var(--white){% endif %};">{{ score.score }}</td>
+            <td style="color:var(--text-muted);">{{ score.round.maximum_score }}</td>
+            <td>{% widthratio score.score score.round.maximum_score 100 %}%</td>
+            <td style="color:var(--text-muted);">{{ score.date_shot|date:"j M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="color:var(--text-muted);">No scores for this selection.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

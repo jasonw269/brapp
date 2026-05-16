@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Events{% endblock %}
+{% block page_title %}Events{% endblock %}
+{% block topbar_actions %}
+{% if request.user.is_committee or request.user.is_admin %}
+<a href="{% url 'event_create' %}" class="btn btn-gold btn-sm">+ Create Event</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">Upcoming Events</div>
+    {% for event in upcoming %}
+    <div style="padding:16px 0;border-bottom:1px solid var(--dark3);display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                <span class="badge-pill {% if event.event_type == 'internal' %}badge-info{% else %}badge-gold{% endif %}">{{ event.get_event_type_display }}</span>
+                <strong>{{ event.title }}</strong>
+            </div>
+            <div style="font-size:.85rem;color:var(--text-muted);">
+                📅 {{ event.start_date|date:"D, j M Y — H:i" }}
+                {% if event.location %} | 📍 {{ event.location }}{% endif %}
+            </div>
+        </div>
+        <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline btn-sm">View</a>
+    </div>
+    {% empty %}
+    <p style="color:var(--text-muted);">No upcoming events.</p>
+    {% endfor %}
+</div>
+{% if past %}
+<div class="card">
+    <div class="card-header">Past Events</div>
+    {% for event in past %}
+    <div style="padding:10px 0;border-bottom:1px solid var(--dark3);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+            <div style="font-weight:600;">{{ event.title }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">{{ event.start_date|date:"j M Y" }}</div>
+        </div>
+        <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline btn-sm">View</a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

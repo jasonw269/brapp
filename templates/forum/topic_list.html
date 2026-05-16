@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Forum{% endblock %}
+{% block page_title %}Forum{% endblock %}
+{% block topbar_actions %}
+{% if request.user.is_member %}
+<a href="{% url 'topic_create' %}" class="btn btn-gold btn-sm">+ New Topic</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="card">
+    <table class="table">
+        <thead><tr><th>Topic</th><th>Started By</th><th>Posts</th><th>Last Post</th></tr></thead>
+        <tbody>
+        {% for topic in topics %}
+        <tr>
+            <td>
+                {% if topic.is_pinned %}<span style="color:var(--gold);">📌 </span>{% endif %}
+                {% if topic.is_closed %}<span style="color:var(--text-muted);">🔒 </span>{% endif %}
+                <a href="{% url 'topic_detail' topic.pk %}" style="color:var(--gold);text-decoration:none;font-weight:600;">{{ topic.title }}</a>
+            </td>
+            <td style="color:var(--text-muted);">{{ topic.created_by.get_full_name|default:topic.created_by.username|default:'Unknown' }}</td>
+            <td>{{ topic.post_count }}</td>
+            <td style="color:var(--text-muted);">{% if topic.last_post %}{{ topic.last_post.created_at|date:"j M Y H:i" }}{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="color:var(--text-muted);">No topics yet. Start the conversation!</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

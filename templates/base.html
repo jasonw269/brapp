@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BRApp{% endblock %} | Beeston Rylands Archers</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #E8A800;
+            --gold-light: #F5C842;
+            --gold-dark: #B8830A;
+            --black: #111111;
+            --dark: #1A1A1A;
+            --dark2: #242424;
+            --dark3: #2E2E2E;
+            --white: #F5F0E8;
+            --text-muted: #9A9080;
+            --danger: #C0392B;
+            --success: #27AE60;
+            --info: #2980B9;
+            --sidebar-w: 260px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── OVERLAY ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.6);
+            z-index: 99;
+        }
+        .sidebar-overlay.open { display: block; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--dark);
+            border-right: 1px solid var(--dark3);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0; top: 0;
+            z-index: 100;
+            overflow-y: auto;
+            transition: transform .25s ease;
+        }
+
+        .sidebar-brand {
+            padding: 20px 18px;
+            border-bottom: 1px solid var(--dark3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .sidebar-brand img { width: 44px; height: 44px; object-fit: contain; }
+        .brand-name { font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
+        .brand-sub  { font-size: .62rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+        .sidebar-nav { padding: 12px 0; flex: 1; }
+        .nav-section { padding: 10px 18px 3px; font-size: .62rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dark); font-weight: 700; }
+        .nav-link {
+            display: flex; align-items: center; gap: 11px;
+            padding: 9px 18px;
+            color: var(--text-muted); text-decoration: none; font-size: .88rem;
+            border-left: 3px solid transparent;
+            transition: all .18s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--gold); background: rgba(232,168,0,.08); border-left-color: var(--gold); }
+        .nav-icon { font-size: .95rem; width: 18px; text-align: center; flex-shrink: 0; }
+
+        .sidebar-user {
+            padding: 14px 18px;
+            border-top: 1px solid var(--dark3);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .user-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--gold-dark);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Cinzel', serif; font-weight: 700; color: var(--black); font-size: .8rem;
+            flex-shrink: 0; overflow: hidden;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: .83rem; font-weight: 700; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: .68rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ── MAIN ── */
+        .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        .topbar {
+            background: var(--dark);
+            border-bottom: 1px solid var(--dark3);
+            padding: 14px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 14px; }
+        .hamburger {
+            display: none;
+            background: none; border: none; color: var(--text-muted);
+            font-size: 1.4rem; cursor: pointer; padding: 4px;
+            line-height: 1;
+        }
+        .page-title { font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 600; color: var(--white); letter-spacing: 1px; }
+        .topbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+        .content { flex: 1; padding: 28px; max-width: 1200px; width: 100%; }
+
+        /* ── PUBLIC NAV (no sidebar) ── */
+        .pub-nav {
+            background: var(--dark);
+            border-bottom: 1px solid var(--dark3);
+            padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 200;
+        }
+        .pub-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; padding: 14px 0; }
+        .pub-brand img { width: 36px; height: 36px; object-fit: contain; }
+        .pub-brand-name { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
+        .pub-links { display: flex; align-items: center; gap: 4px; }
+        .pub-link {
+            color: var(--text-muted); text-decoration: none;
+            padding: 8px 14px; border-radius: 4px;
+            font-size: .88rem; font-weight: 700; letter-spacing: .5px;
+            transition: all .18s;
+        }
+        .pub-link:hover, .pub-link.active { color: var(--gold); background: rgba(232,168,0,.08); }
+        .pub-link.btn-gold { background: var(--gold); color: var(--black); border-radius: 4px; }
+        .pub-link.btn-gold:hover { background: var(--gold-light); }
+        .pub-hamburger {
+            display: none;
+            background: none; border: none; color: var(--text-muted);
+            font-size: 1.5rem; cursor: pointer; padding: 8px;
+        }
+        .pub-mobile-menu {
+            display: none;
+            flex-direction: column;
+            background: var(--dark);
+            border-bottom: 1px solid var(--dark3);
+            padding: 8px 16px 16px;
+        }
+        .pub-mobile-menu.open { display: flex; }
+        .pub-mobile-menu .pub-link { padding: 10px 4px; border-bottom: 1px solid var(--dark3); border-radius: 0; }
+
+        .pub-content { flex: 1; max-width: 1100px; margin: 0 auto; padding: 40px 24px; width: 100%; }
+        .pub-body { display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ── COMPONENTS ── */
+        .card { background: var(--dark); border: 1px solid var(--dark3); border-radius: 8px; padding: 22px; margin-bottom: 20px; }
+        .card-header {
+            font-family: 'Cinzel', serif; font-size: .95rem; color: var(--gold);
+            margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--dark3);
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 8px 16px; border-radius: 4px; border: none;
+            cursor: pointer; font-family: 'Lato', sans-serif; font-size: .83rem;
+            font-weight: 700; text-decoration: none; transition: all .18s;
+            letter-spacing: .5px; white-space: nowrap;
+        }
+        .btn-gold { background: var(--gold); color: var(--black); }
+        .btn-gold:hover { background: var(--gold-light); color: var(--black); }
+        .btn-outline { background: transparent; border: 1px solid var(--dark3); color: var(--text-muted); }
+        .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-sm { padding: 5px 11px; font-size: .78rem; }
+
+        .badge-pill {
+            display: inline-block; padding: 2px 9px; border-radius: 20px;
+            font-size: .68rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+        }
+        .badge-gold    { background: rgba(232,168,0,.15);  color: var(--gold);       border: 1px solid rgba(232,168,0,.3); }
+        .badge-success { background: rgba(39,174,96,.15);  color: var(--success);    border: 1px solid rgba(39,174,96,.3); }
+        .badge-danger  { background: rgba(192,57,43,.15);  color: var(--danger);     border: 1px solid rgba(192,57,43,.3); }
+        .badge-info    { background: rgba(41,128,185,.15); color: var(--info);       border: 1px solid rgba(41,128,185,.3); }
+        .badge-muted   { background: rgba(154,144,128,.15);color: var(--text-muted); border: 1px solid rgba(154,144,128,.2); }
+
+        .form-control, .form-select {
+            width: 100%; background: var(--dark2); border: 1px solid var(--dark3);
+            color: var(--white); padding: 10px 13px; border-radius: 4px;
+            font-family: 'Lato', sans-serif; font-size: .9rem; transition: border-color .2s;
+        }
+        .form-control:focus, .form-select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(232,168,0,.15); }
+        .form-control::placeholder { color: var(--text-muted); }
+        .form-label { display: block; font-size: .75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .form-group { margin-bottom: 16px; }
+        .form-select option { background: var(--dark2); }
+
+        .table { width: 100%; border-collapse: collapse; }
+        .table th { font-size: .7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); font-weight: 700; padding: 9px 12px; border-bottom: 1px solid var(--dark3); text-align: left; white-space: nowrap; }
+        .table td { padding: 11px 12px; border-bottom: 1px solid rgba(46,46,46,.5); font-size: .88rem; color: var(--white); }
+        .table tr:last-child td { border-bottom: none; }
+        .table tr:hover td { background: rgba(232,168,0,.04); }
+
+        /* responsive table wrapper */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        .alert { padding: 11px 15px; border-radius: 4px; margin-bottom: 14px; font-size: .88rem; border-left: 3px solid; }
+        .alert-success { background: rgba(39,174,96,.1);  border-color: var(--success); color: #5cb85c; }
+        .alert-error   { background: rgba(192,57,43,.1);  border-color: var(--danger);  color: #e74c3c; }
+        .alert-info    { background: rgba(41,128,185,.1); border-color: var(--info);    color: #5dade2; }
+        .alert-warning { background: rgba(232,168,0,.1);  border-color: var(--gold);    color: var(--gold); }
+
+        .grid { display: grid; gap: 18px; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        .stat-card { background: var(--dark); border: 1px solid var(--dark3); border-radius: 8px; padding: 18px; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--gold); }
+        .stat-value { font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+        .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 3px; }
+        .stat-icon  { position: absolute; right: 14px; top: 14px; font-size: 1.8rem; opacity: .12; }
+
+        .divider { height: 1px; background: linear-gradient(90deg,var(--gold),transparent); margin: 18px 0; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            :root { --sidebar-w: 260px; }
+
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); box-shadow: 4px 0 30px rgba(0,0,0,.5); }
+
+            .main { margin-left: 0; }
+            .hamburger { display: block; }
+
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .content { padding: 16px; }
+            .topbar { padding: 12px 16px; }
+            .topbar-actions { gap: 6px; }
+            .topbar-actions .btn { padding: 6px 10px; font-size: .75rem; }
+
+            .pub-links { display: none; }
+            .pub-hamburger { display: block; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% load static %}
+
+{% if user.is_authenticated %}
+{# ── AUTHENTICATED LAYOUT ── #}
+<div class="sidebar-overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+    <a href="{% url 'dashboard' %}" class="sidebar-brand">
+        <img src="{% static 'images/bralogo.jpg' %}" alt="BRA Logo">
+        <div>
+            <div class="brand-name">BRApp</div>
+            <div class="brand-sub">Beeston Rylands Archers</div>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main</div>
+        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <span class="nav-icon">🏹</span> Dashboard
+        </a>
+
+        {% if user.is_member %}
+        <div class="nav-section">Membership</div>
+        <a href="{% url 'member_list' %}"       class="nav-link"><span class="nav-icon">👥</span> Members</a>
+        <a href="{% url 'membership_list' %}"   class="nav-link"><span class="nav-icon">🎫</span> Memberships</a>
+        <a href="{% url 'profile' %}"           class="nav-link"><span class="nav-icon">👤</span> My Profile</a>
+
+        <div class="nav-section">Archery</div>
+        <a href="{% url 'score_list' %}"    class="nav-link"><span class="nav-icon">🎯</span> My Scores</a>
+        <a href="{% url 'leaderboard' %}"   class="nav-link"><span class="nav-icon">🏆</span> Leaderboard</a>
+        <a href="{% url 'round_list' %}"    class="nav-link"><span class="nav-icon">📋</span> Rounds</a>
+
+        <div class="nav-section">Club</div>
+        <a href="{% url 'event_list' %}"    class="nav-link"><span class="nav-icon">📅</span> Events</a>
+        <a href="{% url 'topic_list' %}"    class="nav-link"><span class="nav-icon">💬</span> Forum</a>
+        <a href="{% url 'badge_list' %}"    class="nav-link"><span class="nav-icon">🏅</span> Badges</a>
+        {% endif %}
+
+        <div class="nav-section">Courses</div>
+        <a href="{% url 'course_list' %}" class="nav-link"><span class="nav-icon">📚</span> Courses</a>
+        {% if user.is_committee or user.is_admin %}
+        <a href="{% url 'course_manage' %}" class="nav-link"><span class="nav-icon">⚙️</span> Manage Courses</a>
+        {% endif %}
+
+        <div class="nav-section">Club Info</div>
+        <a href="{% url 'about' %}"   class="nav-link"><span class="nav-icon">ℹ️</span> About</a>
+        <a href="{% url 'gallery' %}" class="nav-link"><span class="nav-icon">🖼️</span> Gallery</a>
+        <a href="{% url 'contact' %}" class="nav-link"><span class="nav-icon">✉️</span> Contact</a>
+
+        {% if user.is_admin %}
+        <div class="nav-section">Admin</div>
+        <a href="/admin/" class="nav-link"><span class="nav-icon">🔧</span> Site Admin</a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            {% if user.profile.photo %}<img src="{{ user.profile.photo.url }}" alt="">
+            {% else %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% endif %}
+        </div>
+        <div class="user-info">
+            <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+            <div class="user-role">{{ user.committee_role|default:user.role }}</div>
+        </div>
+        <a href="{% url 'logout' %}" title="Logout" style="color:var(--text-muted);font-size:1rem;text-decoration:none;flex-shrink:0;">⎋</a>
+    </div>
+</aside>
+
+<main class="main">
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+            <div class="page-title">{% block page_title %}BRApp{% endblock %}</div>
+        </div>
+        <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
+    </div>
+
+    <div class="content">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<script>
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('overlay');
+    const hamburger = document.getElementById('hamburger');
+    function openSidebar()  { sidebar.classList.add('open'); overlay.classList.add('open'); }
+    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+    hamburger.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
+    overlay.addEventListener('click', closeSidebar);
+</script>
+
+{% else %}
+{# ── PUBLIC LAYOUT ── #}
+<div class="pub-body" style="width:100%;">
+    <nav class="pub-nav">
+        <a href="{% url 'home' %}" class="pub-brand">
+            <img src="{% static 'images/bralogo.jpg' %}" alt="BRA">
+            <span class="pub-brand-name">BRApp</span>
+        </a>
+        <div class="pub-links">
+            <a href="{% url 'about' %}"       class="pub-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a>
+            <a href="{% url 'gallery' %}"     class="pub-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}">Gallery</a>
+            <a href="{% url 'contact' %}"     class="pub-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+            <a href="{% url 'course_list' %}" class="pub-link {% if request.resolver_match.url_name == 'course_list' %}active{% endif %}">Courses</a>
+            <a href="{% url 'login' %}"       class="pub-link btn-gold" style="margin-left:8px;">Member Login</a>
+        </div>
+        <button class="pub-hamburger" id="pubHamburger" aria-label="Menu">☰</button>
+    </nav>
+
+    <div class="pub-mobile-menu" id="pubMobileMenu">
+        <a href="{% url 'about' %}"       class="pub-link">ℹ️ About</a>
+        <a href="{% url 'gallery' %}"     class="pub-link">🖼️ Gallery</a>
+        <a href="{% url 'contact' %}"     class="pub-link">✉️ Contact</a>
+        <a href="{% url 'course_list' %}" class="pub-link">📚 Courses</a>
+        <a href="{% url 'login' %}"       class="pub-link" style="color:var(--gold);">🏹 Member Login</a>
+    </div>
+
+    <div class="pub-content">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+        {% block pub_content %}{% endblock %}
+    </div>
+
+    <footer style="background:var(--dark);border-top:1px solid var(--dark3);text-align:center;padding:20px;font-size:.8rem;color:var(--text-muted);">
+        © 2025 Beeston Rylands Archers · <a href="{% url 'contact' %}" style="color:var(--gold);text-decoration:none;">Contact Us</a>
+    </footer>
+</div>
+
+<script>
+    const ph = document.getElementById('pubHamburger');
+    const pm = document.getElementById('pubMobileMenu');
+    ph.addEventListener('click', () => pm.classList.toggle('open'));
+</script>
+{% endif %}
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

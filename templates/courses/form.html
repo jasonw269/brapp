@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Course{% endblock %}
+{% block page_title %}{{ action }} Course{% endblock %}
+{% block content %}
+<div style="max-width:600px;">
+<div class="card">
+    <div class="card-header">Course Details</div>
+    <form method="post">{% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label class="form-label">{{ field.label }}</label>{{ field }}
+            {% if field.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-gold">{{ action }}</button>
+            <a href="{% url 'course_manage' %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}

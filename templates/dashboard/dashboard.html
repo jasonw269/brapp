@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block topbar_actions %}
+{% if user.is_member %}
+<a href="{% url 'score_add' %}" class="btn btn-gold btn-sm">+ Add Score</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<h2 style="font-family:'Cinzel',serif;font-size:1.4rem;margin-bottom:8px;">
+    Welcome back, {{ user.first_name|default:user.username }}
+</h2>
+<p style="color:var(--text-muted);margin-bottom:28px;font-size:.9rem;">
+    {% now "l, j F Y" %}
+</p>
+
+{% if user.is_member %}
+
+<!-- Membership Status -->
+<div class="grid grid-4" style="margin-bottom:24px;">
+    <div class="stat-card">
+        <span class="stat-icon">🎫</span>
+        {% if active_membership %}
+        <div class="stat-value" style="font-size:1.2rem;">Active</div>
+        <div class="stat-label">{{ active_membership.level }}</div>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Expires {{ active_membership.end_date }}</div>
+        {% else %}
+        <div class="stat-value" style="font-size:1.2rem;color:var(--danger);">Lapsed</div>
+        <div class="stat-label">Membership</div>
+        {% endif %}
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">🏅</span>
+        <div class="stat-value">{{ user.badges.count }}</div>
+        <div class="stat-label">Badges Earned</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">🎯</span>
+        <div class="stat-value">{{ user.scores.count }}</div>
+        <div class="stat-label">Scores Logged</div>
+    </div>
+    <div class="stat-card">
+        <span class="stat-icon">📅</span>
+        <div class="stat-value">{{ attending_events.count }}</div>
+        <div class="stat-label">Upcoming Events</div>
+    </div>
+</div>
+
+<!-- Check-in Reminder -->
+{% if checkin_events %}
+<div class="card" style="border-color:var(--gold);border-left:4px solid var(--gold);">
+    <div class="card-header" style="color:var(--gold);">⚡ Check-in Today</div>
+    {% for att in checkin_events %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--dark3);">
+        <span>{{ att.event.title }} — {{ att.event.start_date|date:"H:i" }}</span>
+        <a href="{% url 'event_checkin' att.event.pk %}" class="btn btn-gold btn-sm">Check In</a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="grid grid-2">
+    <!-- Internal Events -->
+    <div class="card">
+        <div class="card-header">
+            📍 Next Internal Events
+            <a href="{% url 'event_list' %}" class="btn btn-outline btn-sm">All Events</a>
+        </div>
+        {% for event in upcoming_internal %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--dark3);">
+            <div style="font-weight:700;font-size:.95rem;">{{ event.title }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px;">
+                📅 {{ event.start_date|date:"D, j M Y — H:i" }}
+                {% if event.location %} | 📍 {{ event.location }}{% endif %}
+            </div>
+            <div style="margin-top:6px;">
+                <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline btn-sm">View</a>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-muted);font-size:.9rem;">No upcoming internal events.</p>
+        {% endfor %}
+    </div>
+
+    <!-- External Events -->
+    <div class="card">
+        <div class="card-header">🌍 Next External Events</div>
+        {% for event in upcoming_external %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--dark3);">
+            <div style="font-weight:700;font-size:.95rem;">{{ event.title }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:2px;">
+                📅 {{ event.start_date|date:"D, j M Y — H:i" }}
+            </div>
+            <div style="margin-top:6px;">
+                <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline btn-sm">View</a>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-muted);font-size:.9rem;">No upcoming external events.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Recent Badges -->
+{% if recent_badges %}
+<div class="card">
+    <div class="card-header">🏅 Recent Badges <a href="{% url 'badge_list' %}" class="btn btn-outline btn-sm">All Badges</a></div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        {% for mb in recent_badges %}
+        <div style="text-align:center;padding:12px;background:var(--dark2);border-radius:8px;border:1px solid var(--dark3);min-width:100px;">
+            {% if mb.badge.image %}
+            <img src="{{ mb.badge.image.url }}" alt="{{ mb.badge.name }}" style="width:48px;height:48px;object-fit:contain;margin-bottom:6px;">
+            {% else %}
+            <div style="font-size:2rem;margin-bottom:6px;">🏅</div>
+            {% endif %}
+            <div style="font-size:.8rem;font-weight:700;color:var(--gold);">{{ mb.badge.name }}</div>
+            <div style="font-size:.7rem;color:var(--text-muted);">{{ mb.awarded_at|date:"j M Y" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<!-- Course guest / guest dashboard -->
+<div class="card" style="text-align:center;padding:48px;">
+    <div style="font-size:3rem;margin-bottom:16px;">🏹</div>
+    <h2 style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:12px;">Welcome to BRApp</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">You have limited access. Browse our open courses below.</p>
+    <a href="{% url 'course_list' %}" class="btn btn-gold">View Courses</a>
+</div>
+{% endif %}
+{% endblock %}

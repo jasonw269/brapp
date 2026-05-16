@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Application Submitted | BRApp</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root{--gold:#E8A800;--black:#111;--dark:#1A1A1A;--white:#F5F0E8;--muted:#9A9080;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Lato',sans-serif;background:var(--black);color:var(--white);min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;}
+        .wrap{max-width:500px;padding:40px;}
+        .icon{font-size:4rem;margin-bottom:20px;}
+        h1{font-family:'Cinzel',serif;color:var(--gold);font-size:1.8rem;margin-bottom:12px;}
+        p{color:var(--muted);line-height:1.7;margin-bottom:24px;}
+        a{color:var(--gold);text-decoration:none;border:1px solid var(--gold);padding:10px 24px;border-radius:4px;font-family:'Cinzel',serif;letter-spacing:1px;}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="icon">✅</div>
+    <h1>Application Submitted</h1>
+    <p>Thank you for your application. We will review it and be in touch to confirm your place or add you to the waitlist.</p>
+    <a href="{% url 'course_list' %}">← Back to Courses</a>
+</div>
+</body>
+</html>

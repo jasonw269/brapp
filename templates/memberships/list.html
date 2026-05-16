@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Memberships{% endblock %}
+{% block page_title %}Memberships{% endblock %}
+{% block topbar_actions %}
+{% if request.user.is_admin or request.user.committee_role == 'Member' %}
+<a href="{% url 'membership_create' %}" class="btn btn-gold btn-sm">+ New Membership</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">Membership Records</div>
+    <table class="table">
+        <thead><tr><th>Member</th><th>Level</th><th>Start</th><th>End</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for m in memberships %}
+        <tr>
+            <td>{{ m.user.get_full_name|default:m.user.username }}</td>
+            <td>{{ m.level }}</td>
+            <td>{{ m.start_date|date:"j M Y" }}</td>
+            <td>{{ m.end_date|date:"j M Y" }}</td>
+            <td>£{{ m.price }}</td>
+            <td>{% if m.is_active %}<span class="badge-pill badge-success">Active</span>{% else %}<span class="badge-pill badge-danger">Expired</span>{% endif %}</td>
+            <td>{% if request.user.is_admin or request.user.committee_role == 'Member' %}<a href="{% url 'membership_edit' m.pk %}" class="btn btn-outline btn-sm">Edit</a>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="color:var(--text-muted);">No membership records.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

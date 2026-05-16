@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Event{% endblock %}
+{% block page_title %}{{ action }} Event{% endblock %}
+{% block content %}
+<div style="max-width:700px;">
+<div class="card">
+    <div class="card-header">Event Information</div>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ field.errors }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="divider"></div>
+        <div class="card-header" style="margin-bottom:12px;">📊 Poll Options (up to 20)</div>
+        <div id="poll-options">
+            {% for i in "12345678" %}
+            <div class="form-group">
+                <label class="form-label">Option {{ forloop.counter }}</label>
+                <input type="text" name="poll_option" class="form-control" placeholder="Leave blank to skip">
+            </div>
+            {% endfor %}
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-gold">{{ action }} Event</button>
+            <a href="{% url 'event_list' %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+</div>
+{% endblock %}
