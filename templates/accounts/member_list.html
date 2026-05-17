@@ -15,7 +15,7 @@
     <div class="card-header">Club Members</div>
     <div class="table-wrap">
     <table class="table">
-        <thead><tr><th>Name</th><th>Role</th><th>Membership</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Name</th><th>Reg No.</th><th>Role</th><th>Membership</th><th>Actions</th></tr></thead>
         <tbody>
         {% for member in members %}
         <tr>
@@ -27,6 +27,7 @@
                     {{ member.get_full_name|default:member.username }}
                 </div>
             </td>
+            <td style="color:var(--text-muted);font-size:.85rem;">{{ member.profile.registration_number|default:'—' }}</td>
             <td>
                 <span class="badge-pill badge-gold">{{ member.committee_role|default:member.role }}</span>
             </td>

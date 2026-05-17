@@ -3,7 +3,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from .models import Event, EventPollOption, EventPollVote, EventAttendance, Location
-from .forms import EventForm, PollOptionFormSet
+from .forms import EventForm
+from accounts.models import User
+
+
+def _checkin_allowed(event):
+    """Check-in is open from event creation until midnight on the day of the event."""
+    now = timezone.now()
+    event_date = event.start_date.date()
+    # Midnight at end of the event's day (i.e. start of next day)
+    midnight = timezone.make_aware(
+        timezone.datetime(event_date.year, event_date.month, event_date.day, 23, 59, 59)
+    )
+    return now <= midnight
 
 
 @login_required
@@ -17,20 +29,56 @@ def event_list(request):
 @login_required
 def event_detail(request, pk):
     event = get_object_or_404(Event, pk=pk)
+    now = timezone.now()
+    today = now.date()
+
     user_attendance = None
     if request.user.is_member:
-        user_attendance = EventAttendance.objects.filter(event=event, user=request.user).first()
-    attendees = EventAttendance.objects.filter(event=event).select_related('user')
+        user_attendance = EventAttendance.objects.filter(
+            event=event, user=request.user
+        ).first()
+
+    # All attendees with their poll votes for this event
+    attendees = EventAttendance.objects.filter(
+        event=event
+    ).select_related('user', 'user__profile').order_by('user__first_name')
+
     poll_options = event.poll_options.all()
+
+    # Current user's votes
     user_votes = []
     if request.user.is_authenticated:
-        user_votes = list(EventPollVote.objects.filter(option__event=event, user=request.user).values_list('option_id', flat=True))
+        user_votes = list(
+            EventPollVote.objects.filter(
+                option__event=event, user=request.user
+            ).values_list('option_id', flat=True)
+        )
+
+    # Build per-attendee vote map: {attendance_id: [option_text, ...]}
+    attendee_votes = {}
+    if poll_options.exists():
+        all_votes = EventPollVote.objects.filter(
+            option__event=event
+        ).select_related('option').values('user_id', 'option__text')
+        for v in all_votes:
+            attendee_votes.setdefault(v['user_id'], []).append(v['option__text'])
+
+    checkin_open = _checkin_allowed(event)
+    is_today = event.start_date.date() == today
+
+    # Total votes per option for the poll bar widths
+    total_votes = sum(o.votes.count() for o in poll_options) or 1
+
     return render(request, 'events/detail.html', {
         'event': event,
         'user_attendance': user_attendance,
         'attendees': attendees,
         'poll_options': poll_options,
         'user_votes': user_votes,
+        'attendee_votes': attendee_votes,
+        'checkin_open': checkin_open,
+        'is_today': is_today,
+        'total_votes': total_votes,
     })
 
 
@@ -45,7 +93,6 @@ def event_create(request):
             event = form.save(commit=False)
             event.created_by = request.user
             event.save()
-            # Save poll options
             options = request.POST.getlist('poll_option')
             for i, opt in enumerate(options):
                 if opt.strip():
@@ -75,12 +122,35 @@ def event_attend(request, pk):
 
 @login_required
 def event_checkin(request, pk):
+    """Check in the current user (or another user if admin)."""
     event = get_object_or_404(Event, pk=pk)
-    attendance = get_object_or_404(EventAttendance, event=event, user=request.user)
-    attendance.checked_in = True
-    attendance.checked_in_at = timezone.now()
-    attendance.save()
-    messages.success(request, f'Checked in to {event.title}!')
+
+    if not _checkin_allowed(event):
+        messages.error(request, 'Check-in is no longer available for this event.')
+        return redirect('event_detail', pk=pk)
+
+    # Admin checking in another user
+    target_user_id = request.POST.get('checkin_user_id') if request.method == 'POST' else None
+    if target_user_id and (request.user.is_admin or request.user.is_committee):
+        target_user = get_object_or_404(User, pk=target_user_id)
+    else:
+        target_user = request.user
+
+    attendance = get_object_or_404(EventAttendance, event=event, user=target_user)
+    if not attendance.checked_in:
+        attendance.checked_in = True
+        attendance.checked_in_at = timezone.now()
+        attendance.save()
+        if target_user == request.user:
+            messages.success(request, f'Checked in to {event.title}!')
+        else:
+            messages.success(request, f'{target_user.get_full_name() or target_user.username} checked in.')
+    else:
+        messages.info(request, f'{target_user.get_full_name() or target_user.username} is already checked in.')
+
+    # Stay on event page if admin is checking others in, go to dashboard for self
+    if target_user != request.user:
+        return redirect('event_detail', pk=pk)
     return redirect('dashboard')
 
 

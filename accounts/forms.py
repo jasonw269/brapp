@@ -12,18 +12,20 @@ class LoginForm(AuthenticationForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['photo', 'full_name', 'address_line1', 'address_line2',
-                  'town', 'county', 'postcode', 'gender', 'date_of_birth', 'bio']
+        fields = ['photo', 'full_name', 'registration_number', 'address_line1',
+                  'address_line2', 'town', 'county', 'postcode', 'gender',
+                  'date_of_birth', 'bio']
         widgets = {
-            'full_name':     forms.TextInput(attrs={'class': 'form-control'}),
-            'address_line1': forms.TextInput(attrs={'class': 'form-control'}),
-            'address_line2': forms.TextInput(attrs={'class': 'form-control'}),
-            'town':          forms.TextInput(attrs={'class': 'form-control'}),
-            'county':        forms.TextInput(attrs={'class': 'form-control'}),
-            'postcode':      forms.TextInput(attrs={'class': 'form-control'}),
-            'gender':        forms.Select(attrs={'class': 'form-select'}),
-            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'bio':           forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'full_name':           forms.TextInput(attrs={'class': 'form-control'}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. BRA00123'}),
+            'address_line1':       forms.TextInput(attrs={'class': 'form-control'}),
+            'address_line2':       forms.TextInput(attrs={'class': 'form-control'}),
+            'town':                forms.TextInput(attrs={'class': 'form-control'}),
+            'county':              forms.TextInput(attrs={'class': 'form-control'}),
+            'postcode':            forms.TextInput(attrs={'class': 'form-control'}),
+            'gender':              forms.Select(attrs={'class': 'form-select'}),
+            'date_of_birth':       forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'bio':                 forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
 

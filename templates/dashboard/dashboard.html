@@ -20,7 +20,41 @@
 
 {% if user.is_member %}
 
-<!-- Membership Status -->
+<!-- ── TODAY'S EVENTS HIGHLIGHT ── -->
+{% if todays_events %}
+<div style="background:linear-gradient(135deg,rgba(232,168,0,.15),rgba(232,168,0,.05));border:1px solid var(--gold);border-left:4px solid var(--gold);border-radius:8px;padding:18px 20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <span style="font-size:1.5rem;">⭐</span>
+        <span style="font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);font-weight:700;">Events Today</span>
+    </div>
+    {% for event in todays_events %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(232,168,0,.2);flex-wrap:wrap;gap:8px;">
+        <div>
+            <div style="font-weight:700;font-size:.95rem;">{{ event.title }}</div>
+            <div style="font-size:.8rem;color:var(--text-muted);">
+                🕐 {{ event.start_date|date:"H:i" }}
+                {% if event.location %} · 📍 {{ event.location }}{% endif %}
+                <span class="badge-pill {% if event.event_type == 'internal' %}badge-info{% else %}badge-gold{% endif %}" style="margin-left:6px;">{{ event.get_event_type_display }}</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            {% for att in event.attendances.all %}
+                {% if att.user == user %}
+                    {% if att.checked_in %}
+                    <span class="badge-pill badge-success">✓ Checked In</span>
+                    {% else %}
+                    <a href="{% url 'event_checkin' event.pk %}" class="btn btn-gold btn-sm">✓ Check In</a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline btn-sm">View</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Stat bar -->
 <div class="grid grid-4" style="margin-bottom:24px;">
     <div class="stat-card">
         <span class="stat-icon">🎫</span>
@@ -50,10 +84,10 @@
     </div>
 </div>
 
-<!-- Check-in Reminder -->
+<!-- ── CHECK-IN REMINDER (for events attended but not checked in) ── -->
 {% if checkin_events %}
-<div class="card" style="border-color:var(--gold);border-left:4px solid var(--gold);">
-    <div class="card-header" style="color:var(--gold);">⚡ Check-in Today</div>
+<div class="card" style="border-color:var(--gold);border-left:4px solid var(--gold);margin-bottom:20px;">
+    <div class="card-header" style="color:var(--gold);">⚡ Check-in Reminder</div>
     {% for att in checkin_events %}
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--dark3);">
         <span>{{ att.event.title }} — {{ att.event.start_date|date:"H:i" }}</span>
@@ -63,8 +97,8 @@
 </div>
 {% endif %}
 
+<!-- ── UPCOMING EVENTS ── -->
 <div class="grid grid-2">
-    <!-- Internal Events -->
     <div class="card">
         <div class="card-header">
             📍 Next Internal Events
@@ -86,7 +120,6 @@
         {% endfor %}
     </div>
 
-    <!-- External Events -->
     <div class="card">
         <div class="card-header">🌍 Next External Events</div>
         {% for event in upcoming_external %}
@@ -105,10 +138,12 @@
     </div>
 </div>
 
-<!-- Recent Badges -->
+<!-- ── RECENT BADGES ── -->
 {% if recent_badges %}
 <div class="card">
-    <div class="card-header">🏅 Recent Badges <a href="{% url 'badge_list' %}" class="btn btn-outline btn-sm">All Badges</a></div>
+    <div class="card-header">🏅 Recent Badges
+        <a href="{% url 'badge_list' %}" class="btn btn-outline btn-sm">All Badges</a>
+    </div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;">
         {% for mb in recent_badges %}
         <div style="text-align:center;padding:12px;background:var(--dark2);border-radius:8px;border:1px solid var(--dark3);min-width:100px;">
@@ -126,7 +161,7 @@
 {% endif %}
 
 {% else %}
-<!-- Course guest / guest dashboard -->
+<!-- Guest dashboard -->
 <div class="card" style="text-align:center;padding:48px;">
     <div style="font-size:3rem;margin-bottom:16px;">🏹</div>
     <h2 style="font-family:'Cinzel',serif;color:var(--gold);margin-bottom:12px;">Welcome to BRApp</h2>

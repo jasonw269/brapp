@@ -1,24 +1,84 @@
 {% extends 'base.html' %}
 {% block title %}Edit Profile{% endblock %}
 {% block page_title %}Edit Profile{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'profile' %}" class="btn btn-outline btn-sm">← Back to Profile</a>
+{% endblock %}
 {% block content %}
 <div style="max-width:700px;">
-    <div class="card">
-        <div class="card-header">Personal Information</div>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% for field in form %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">Identity</div>
             <div class="form-group">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ field.errors }}</div>{% endif %}
+                <label class="form-label">Full Name</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.full_name.errors }}</div>{% endif %}
             </div>
-            {% endfor %}
-            <div style="display:flex;gap:10px;margin-top:8px;">
-                <button type="submit" class="btn btn-gold">Save Changes</button>
-                <a href="{% url 'profile' %}" class="btn btn-outline">Cancel</a>
+            <div class="form-group">
+                <label class="form-label">Registration Number</label>
+                {{ form.registration_number }}
+                <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Your Archery GB or club registration number</div>
+                {% if form.registration_number.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.registration_number.errors }}</div>{% endif %}
             </div>
-        </form>
-    </div>
+            <div class="form-group">
+                <label class="form-label">Profile Photo</label>
+                {{ form.photo }}
+                {% if form.photo.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.photo.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">Personal Details</div>
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.gender.errors }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.date_of_birth.errors }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bio</label>
+                {{ form.bio }}
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">Address</div>
+            <div class="form-group">
+                <label class="form-label">Address Line 1</label>
+                {{ form.address_line1 }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Address Line 2</label>
+                {{ form.address_line2 }}
+            </div>
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label class="form-label">Town</label>
+                    {{ form.town }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">County</label>
+                    {{ form.county }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Postcode</label>
+                    {{ form.postcode }}
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-gold">Save Changes</button>
+            <a href="{% url 'profile' %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}

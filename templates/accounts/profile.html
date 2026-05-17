@@ -71,6 +71,7 @@
             <div class="card-header">Personal Details</div>
             <table class="table">
                 <tr><td style="color:var(--text-muted);width:40%;">Email</td><td>{{ profile_user.email|default:'—' }}</td></tr>
+                <tr><td style="color:var(--text-muted);">Reg Number</td><td>{{ profile.registration_number|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Gender</td><td>{{ profile.get_gender_display|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Date of Birth</td><td>{{ profile.date_of_birth|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Address</td>

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ event.title }}{% endblock %}
 {% block page_title %}{{ event.title }}{% endblock %}
+
 {% block topbar_actions %}
 {% if request.user.is_member %}
 <form method="post" action="{% url 'event_attend' event.pk %}">{% csrf_token %}
@@ -10,16 +11,55 @@
 </form>
 {% endif %}
 {% endblock %}
+
 {% block content %}
+
+{% if is_today %}
+<div style="background:rgba(232,168,0,.12);border:1px solid var(--gold);border-left:4px solid var(--gold);border-radius:6px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:1.3rem;">⭐</span>
+    <span style="color:var(--gold);font-weight:700;">This event is <em>today</em> — {{ event.start_date|date:"H:i" }}</span>
+    {% if user_attendance and not user_attendance.checked_in and checkin_open %}
+    <a href="{% url 'event_checkin' event.pk %}" class="btn btn-gold btn-sm" style="margin-left:auto;">✓ Check In Now</a>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="grid grid-2">
+    <!-- Left column: details + poll -->
     <div>
         <div class="card">
             <div class="card-header">Event Details</div>
             <table class="table">
-                <tr><td style="color:var(--text-muted);width:35%;">Type</td><td><span class="badge-pill {% if event.event_type == 'internal' %}badge-info{% else %}badge-gold{% endif %}">{{ event.get_event_type_display }}</span></td></tr>
-                <tr><td style="color:var(--text-muted);">Date</td><td>{{ event.start_date|date:"D, j M Y — H:i" }}</td></tr>
-                {% if event.end_date %}<tr><td style="color:var(--text-muted);">End</td><td>{{ event.end_date|date:"D, j M Y — H:i" }}</td></tr>{% endif %}
-                {% if event.location %}<tr><td style="color:var(--text-muted);">Location</td><td>{{ event.location }}</td></tr>{% endif %}
+                <tr>
+                    <td style="color:var(--text-muted);width:35%;">Type</td>
+                    <td><span class="badge-pill {% if event.event_type == 'internal' %}badge-info{% else %}badge-gold{% endif %}">{{ event.get_event_type_display }}</span></td>
+                </tr>
+                <tr>
+                    <td style="color:var(--text-muted);">Date</td>
+                    <td>{{ event.start_date|date:"D, j M Y — H:i" }}</td>
+                </tr>
+                {% if event.end_date %}
+                <tr>
+                    <td style="color:var(--text-muted);">End</td>
+                    <td>{{ event.end_date|date:"D, j M Y — H:i" }}</td>
+                </tr>
+                {% endif %}
+                {% if event.location %}
+                <tr>
+                    <td style="color:var(--text-muted);">Location</td>
+                    <td>{{ event.location }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="color:var(--text-muted);">Check-in</td>
+                    <td>
+                        {% if checkin_open %}
+                        <span class="badge-pill badge-success">Open until midnight tonight</span>
+                        {% else %}
+                        <span class="badge-pill badge-muted">Closed</span>
+                        {% endif %}
+                    </td>
+                </tr>
             </table>
             {% if event.description %}
             <div class="divider"></div>
@@ -33,17 +73,20 @@
             <div class="card-header">📊 Poll</div>
             {% for option in poll_options %}
             {% with vote_count=option.votes.count %}
-            <div style="margin-bottom:12px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span>{{ option.text }}</span>
-                    <span style="color:var(--text-muted);">{{ vote_count }} votes</span>
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                    <span style="font-size:.9rem;{% if option.pk in user_votes %}color:var(--gold);font-weight:700;{% endif %}">
+                        {% if option.pk in user_votes %}✓ {% endif %}{{ option.text }}
+                    </span>
+                    <span style="color:var(--text-muted);font-size:.82rem;white-space:nowrap;margin-left:8px;">{{ vote_count }} vote{{ vote_count|pluralize }}</span>
                 </div>
-                <div style="background:var(--dark3);border-radius:4px;height:6px;">
-                    <div style="background:var(--gold);border-radius:4px;height:6px;width:{% widthratio vote_count poll_options.count 100 %}%;"></div>
+                <div style="background:var(--dark3);border-radius:4px;height:7px;margin-bottom:5px;">
+                    <div style="background:{% if option.pk in user_votes %}var(--gold){% else %}#4a7abf{% endif %};border-radius:4px;height:7px;width:{% widthratio vote_count total_votes 100 %}%;transition:width .3s;"></div>
                 </div>
                 {% if request.user.is_member %}
-                <a href="{% url 'poll_vote' event.pk option.pk %}" style="font-size:.75rem;color:{% if option.pk in user_votes %}var(--gold){% else %}var(--text-muted){% endif %};">
-                    {% if option.pk in user_votes %}✓ Voted{% else %}Vote{% endif %}
+                <a href="{% url 'poll_vote' event.pk option.pk %}"
+                   style="font-size:.75rem;color:{% if option.pk in user_votes %}var(--gold){% else %}var(--text-muted){% endif %};text-decoration:none;">
+                    {% if option.pk in user_votes %}Remove vote{% else %}Vote for this{% endif %}
                 </a>
                 {% endif %}
             </div>
@@ -53,21 +96,79 @@
         {% endif %}
     </div>
 
+    <!-- Right column: attendees -->
     <div class="card">
-        <div class="card-header">👥 Attendees ({{ attendees.count }})</div>
+        <div class="card-header">
+            👥 Attendees ({{ attendees.count }})
+            {% if attendees.count > 0 %}
+            <span style="font-size:.78rem;color:var(--text-muted);font-family:'Lato',sans-serif;font-weight:400;">
+                {{ attendees|length|add:"0" }}
+                {% with checked=attendees|length %}
+                {% endwith %}
+            </span>
+            {% endif %}
+        </div>
+
         {% for att in attendees %}
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--dark3);">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-dark);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--black);">{{ att.user.first_name|first|upper }}</div>
-            <span>{{ att.user.get_full_name|default:att.user.username }}</span>
-            {% if att.checked_in %}<span class="badge-pill badge-success">Checked In</span>{% endif %}
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--dark3);flex-wrap:wrap;">
+            <!-- Avatar -->
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--gold-dark);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--black);flex-shrink:0;overflow:hidden;">
+                {% if att.user.profile.photo %}<img src="{{ att.user.profile.photo.url }}" style="width:100%;height:100%;object-fit:cover;">
+                {% else %}{{ att.user.first_name|first|upper }}{% endif %}
+            </div>
+
+            <!-- Name + poll vote -->
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:.9rem;font-weight:600;">{{ att.user.get_full_name|default:att.user.username }}</div>
+                {% if attendee_votes|length > 0 %}
+                {% with votes=attendee_votes|dictsort:"0" %}
+                {% endwith %}
+                {% for uid, votetexts in attendee_votes.items %}
+                    {% if uid == att.user.pk %}
+                    <div style="font-size:.75rem;color:#4a90e8;margin-top:2px;">
+                        🗳 {{ votetexts|join:", " }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Check-in status + admin button -->
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                {% if att.checked_in %}
+                    <span class="badge-pill badge-success">✓ Checked In</span>
+                    <span style="font-size:.7rem;color:var(--text-muted);">{{ att.checked_in_at|date:"H:i" }}</span>
+                {% else %}
+                    {% if att.user == request.user and checkin_open %}
+                        <a href="{% url 'event_checkin' event.pk %}" class="btn btn-gold btn-sm">Check In</a>
+                    {% elif request.user.is_admin or request.user.is_committee %}
+                        {% if checkin_open %}
+                        <form method="post" action="{% url 'event_checkin' event.pk %}" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="checkin_user_id" value="{{ att.user.pk }}">
+                            <button type="submit" class="btn btn-outline btn-sm" title="Check in {{ att.user.get_full_name }}">
+                                ✓ Check In
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="badge-pill badge-muted">Not attended</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge-pill badge-muted">Not checked in</span>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
         {% empty %}
-        <p style="color:var(--text-muted);font-size:.85rem;">No attendees yet.</p>
+        <p style="color:var(--text-muted);font-size:.85rem;padding:12px 0;">No attendees yet.</p>
         {% endfor %}
 
-        {% if user_attendance and not user_attendance.checked_in %}
-        <div style="margin-top:16px;">
-            <a href="{% url 'event_checkin' event.pk %}" class="btn btn-gold">✓ Check In Now</a>
+        <!-- Summary counts -->
+        {% if attendees.count > 0 %}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--dark3);display:flex;gap:16px;font-size:.8rem;color:var(--text-muted);">
+            {% with total=attendees.count %}
+            <span>Total: <strong style="color:var(--white);">{{ total }}</strong></span>
+            {% endwith %}
         </div>
         {% endif %}
     </div>
