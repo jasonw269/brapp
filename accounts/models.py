@@ -68,6 +68,7 @@ class Profile(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
     registration_number = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    date_joined_club = models.DateField(blank=True, null=True, verbose_name='Original date of joining')
     bio = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -69,6 +69,13 @@ def event_detail(request, pk):
     # Total votes per option for the poll bar widths
     total_votes = sum(o.votes.count() for o in poll_options) or 1
 
+    from accounts.models import User as UserModel
+    all_members = UserModel.objects.filter(
+        role__in=['member', 'admin']
+    ).order_by('first_name', 'last_name') if (
+        request.user.is_admin or request.user.is_committee
+    ) else []
+
     return render(request, 'events/detail.html', {
         'event': event,
         'user_attendance': user_attendance,
@@ -79,6 +86,7 @@ def event_detail(request, pk):
         'checkin_open': checkin_open,
         'is_today': is_today,
         'total_votes': total_votes,
+        'all_members': all_members,
     })
 
 
@@ -122,33 +130,40 @@ def event_attend(request, pk):
 
 @login_required
 def event_checkin(request, pk):
-    """Check in the current user (or another user if admin)."""
+    """Check in the current user (or another user if admin/committee).
+    Committee members can check in any member even if they haven't registered to attend.
+    """
     event = get_object_or_404(Event, pk=pk)
 
     if not _checkin_allowed(event):
         messages.error(request, 'Check-in is no longer available for this event.')
         return redirect('event_detail', pk=pk)
 
-    # Admin checking in another user
+    # Admin/committee checking in another user
     target_user_id = request.POST.get('checkin_user_id') if request.method == 'POST' else None
     if target_user_id and (request.user.is_admin or request.user.is_committee):
         target_user = get_object_or_404(User, pk=target_user_id)
+        # Create attendance record if it doesn't exist (walk-in)
+        attendance, created = EventAttendance.objects.get_or_create(
+            event=event, user=target_user
+        )
     else:
         target_user = request.user
+        attendance = get_object_or_404(EventAttendance, event=event, user=target_user)
 
-    attendance = get_object_or_404(EventAttendance, event=event, user=target_user)
     if not attendance.checked_in:
         attendance.checked_in = True
         attendance.checked_in_at = timezone.now()
         attendance.save()
+        name = target_user.get_full_name() or target_user.username
         if target_user == request.user:
             messages.success(request, f'Checked in to {event.title}!')
         else:
-            messages.success(request, f'{target_user.get_full_name() or target_user.username} checked in.')
+            messages.success(request, f'{name} checked in{"  (walk-in)" if created else ""}.')
     else:
-        messages.info(request, f'{target_user.get_full_name() or target_user.username} is already checked in.')
+        name = target_user.get_full_name() or target_user.username
+        messages.info(request, f'{name} is already checked in.')
 
-    # Stay on event page if admin is checking others in, go to dashboard for self
     if target_user != request.user:
         return redirect('event_detail', pk=pk)
     return redirect('dashboard')

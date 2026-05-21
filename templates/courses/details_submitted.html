@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details Submitted | BRA</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root{--gold:#E8A800;--black:#111;--dark:#1A1A1A;--white:#F5F0E8;--muted:#9A9080;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Lato',sans-serif;background:var(--black);color:var(--white);min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px 20px;}
+        .wrap{max-width:480px;}
+        .icon{font-size:3.5rem;margin-bottom:18px;}
+        h1{font-family:'Cinzel',serif;color:var(--gold);font-size:1.6rem;margin-bottom:12px;}
+        p{color:var(--muted);line-height:1.8;margin-bottom:12px;font-size:.9rem;}
+    </style>
+</head>
+<body>
+{% load static %}
+<div class="wrap">
+    <div class="icon">✅</div>
+    <h1>Details Submitted!</h1>
+    <p>Thank you {{ app.first_name }}. We've received your details for <strong style="color:var(--gold);">{{ app.course.title }}</strong>.</p>
+    {% if app.course.price > 0 %}
+    <p>Our team will contact you at <strong>{{ app.email }}</strong> with payment instructions. Your place will be confirmed once payment is received.</p>
+    {% else %}
+    <p>Our team will be in touch to confirm your place on the course.</p>
+    {% endif %}
+</div>
+</body>
+</html>

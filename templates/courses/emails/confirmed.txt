@@ -1,0 +1,17 @@
+Hello {{ app.first_name }},
+
+Your place on {{ app.course.title }} is now confirmed!
+
+Course details:
+  Start date: {{ app.course.start_date }}
+{% if app.course.end_date %}  End date:   {{ app.course.end_date }}
+{% endif %}{% if app.course.price > 0 %}  Fee paid:   £{{ app.course.price }}
+{% endif %}
+Please arrive a few minutes before the start time. Comfortable clothing and flat-soled shoes are recommended.
+
+If you have any questions before the course starts, please contact us:
+{{ base_url }}/contact/
+
+We look forward to seeing you!
+
+The BRA Team

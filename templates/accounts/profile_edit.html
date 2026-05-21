@@ -1,8 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}Edit Profile{% endblock %}
-{% block page_title %}Edit Profile{% endblock %}
+{% block page_title %}{% if editing_other %}Edit Profile — {{ target_user.get_full_name|default:target_user.username }}{% else %}Edit My Profile{% endif %}{% endblock %}
 {% block topbar_actions %}
+{% if editing_other %}
+<a href="{% url 'member_profile' target_user.pk %}" class="btn btn-outline btn-sm">← Back to Profile</a>
+{% else %}
 <a href="{% url 'profile' %}" class="btn btn-outline btn-sm">← Back to Profile</a>
+{% endif %}
 {% endblock %}
 {% block content %}
 <div style="max-width:700px;">
@@ -22,6 +26,14 @@
                 <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Your Archery GB or club registration number</div>
                 {% if form.registration_number.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.registration_number.errors }}</div>{% endif %}
             </div>
+            {% if can_edit_join_date %}
+            <div class="form-group">
+                <label class="form-label">Original Date of Joining</label>
+                {{ form.date_joined_club }}
+                <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">The date this member first joined Beeston Rylands Archers</div>
+                {% if form.date_joined_club.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.date_joined_club.errors }}</div>{% endif %}
+            </div>
+            {% endif %}
             <div class="form-group">
                 <label class="form-label">Profile Photo</label>
                 {{ form.photo }}
@@ -35,12 +47,10 @@
                 <div class="form-group">
                     <label class="form-label">Gender</label>
                     {{ form.gender }}
-                    {% if form.gender.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.gender.errors }}</div>{% endif %}
                 </div>
                 <div class="form-group">
                     <label class="form-label">Date of Birth</label>
                     {{ form.date_of_birth }}
-                    {% if form.date_of_birth.errors %}<div style="color:#e74c3c;font-size:.8rem;margin-top:4px;">{{ form.date_of_birth.errors }}</div>{% endif %}
                 </div>
             </div>
             <div class="form-group">
@@ -52,32 +62,31 @@
         <div class="card" style="margin-bottom:16px;">
             <div class="card-header">Address</div>
             <div class="form-group">
-                <label class="form-label">Address Line 1</label>
-                {{ form.address_line1 }}
+                <label class="form-label">Address Line 1</label>{{ form.address_line1 }}
             </div>
             <div class="form-group">
-                <label class="form-label">Address Line 2</label>
-                {{ form.address_line2 }}
+                <label class="form-label">Address Line 2</label>{{ form.address_line2 }}
             </div>
             <div class="grid grid-3">
                 <div class="form-group">
-                    <label class="form-label">Town</label>
-                    {{ form.town }}
+                    <label class="form-label">Town</label>{{ form.town }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">County</label>
-                    {{ form.county }}
+                    <label class="form-label">County</label>{{ form.county }}
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Postcode</label>
-                    {{ form.postcode }}
+                    <label class="form-label">Postcode</label>{{ form.postcode }}
                 </div>
             </div>
         </div>
 
         <div style="display:flex;gap:10px;">
             <button type="submit" class="btn btn-gold">Save Changes</button>
+            {% if editing_other %}
+            <a href="{% url 'member_profile' target_user.pk %}" class="btn btn-outline">Cancel</a>
+            {% else %}
             <a href="{% url 'profile' %}" class="btn btn-outline">Cancel</a>
+            {% endif %}
         </div>
     </form>
 </div>

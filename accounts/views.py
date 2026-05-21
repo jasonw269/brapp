@@ -3,7 +3,14 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import User, Profile
-from .forms import LoginForm, ProfileForm, UserRoleForm, UserCreateForm
+from .forms import (LoginForm, ProfileForm, ProfileMembershipForm,
+                    UserRoleForm, UserCreateForm, PasswordChangeAdminForm)
+
+MEMBERSHIP_ROLES = ('Chair', 'Treasurer', 'Secretary', 'Member')
+
+
+def _can_edit_join_date(user):
+    return user.is_admin or user.committee_role in MEMBERSHIP_ROLES
 
 
 def login_view(request):
@@ -31,24 +38,43 @@ def profile_view(request, user_id=None):
     return render(request, 'accounts/profile.html', {
         'profile_user': target_user,
         'profile': profile,
+        'can_edit_join_date': _can_edit_join_date(request.user),
     })
 
 
 @login_required
-def profile_edit(request):
+def profile_edit(request, user_id=None):
+    """Edit own profile, or another user's profile if admin/membership officer."""
+    if user_id and _can_edit_join_date(request.user):
+        target_user = get_object_or_404(User, pk=user_id)
+    else:
+        target_user = request.user
+
     profile, _ = Profile.objects.get_or_create(
-        user=request.user,
-        defaults={'full_name': request.user.get_full_name() or request.user.username}
+        user=target_user,
+        defaults={'full_name': target_user.get_full_name() or target_user.username}
     )
+
+    # Membership officers get the extended form with date_joined_club
+    FormClass = ProfileMembershipForm if _can_edit_join_date(request.user) else ProfileForm
+
     if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        form = FormClass(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile updated successfully.')
+            if user_id:
+                return redirect('member_profile', user_id=target_user.pk)
             return redirect('profile')
     else:
-        form = ProfileForm(instance=profile)
-    return render(request, 'accounts/profile_edit.html', {'form': form})
+        form = FormClass(instance=profile)
+
+    return render(request, 'accounts/profile_edit.html', {
+        'form': form,
+        'target_user': target_user,
+        'editing_other': target_user != request.user,
+        'can_edit_join_date': _can_edit_join_date(request.user),
+    })
 
 
 @login_required
@@ -56,7 +82,9 @@ def member_list(request):
     if not request.user.is_member:
         messages.error(request, 'Access denied.')
         return redirect('dashboard')
-    members = User.objects.filter(role__in=['member', 'admin']).select_related('profile').order_by('first_name', 'last_name')
+    members = User.objects.filter(
+        role__in=['member', 'admin']
+    ).select_related('profile').order_by('first_name', 'last_name')
     return render(request, 'accounts/member_list.html', {'members': members})
 
 
@@ -78,11 +106,9 @@ def user_create(request):
         form = UserCreateForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            # Auto-upgrade guest to member if a committee role is assigned
             if user.committee_role and user.role == 'guest':
                 user.role = 'member'
             user.save()
-            # Create a blank profile
             Profile.objects.create(
                 user=user,
                 full_name=user.get_full_name() or user.username
@@ -117,6 +143,26 @@ def user_role_edit(request, user_id):
     else:
         form = UserRoleForm(instance=target_user)
     return render(request, 'accounts/user_role_edit.html', {
-        'form': form,
-        'target_user': target_user,
+        'form': form, 'target_user': target_user,
+    })
+
+
+@login_required
+def user_password_change(request, user_id):
+    """Admin-only: change any user's password."""
+    if not request.user.is_admin:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    target_user = get_object_or_404(User, pk=user_id)
+    if request.method == 'POST':
+        form = PasswordChangeAdminForm(request.POST)
+        if form.is_valid():
+            target_user.set_password(form.cleaned_data['new_password1'])
+            target_user.save()
+            messages.success(request, f'Password changed for {target_user}.')
+            return redirect('member_profile', user_id=user_id)
+    else:
+        form = PasswordChangeAdminForm()
+    return render(request, 'accounts/password_change.html', {
+        'form': form, 'target_user': target_user,
     })

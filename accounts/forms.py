@@ -3,6 +3,10 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from .models import User, Profile
 
+COMMITTEE_CHOICES_WITH_BLANK = [('', '— None —')] + User.COMMITTEE_CHOICES
+
+MEMBERSHIP_ROLES = ('Chair', 'Treasurer', 'Secretary', 'Member')
+
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}))
@@ -10,11 +14,12 @@ class LoginForm(AuthenticationForm):
 
 
 class ProfileForm(forms.ModelForm):
+    """Standard profile edit — members edit their own profile."""
     class Meta:
         model = Profile
-        fields = ['photo', 'full_name', 'registration_number', 'address_line1',
-                  'address_line2', 'town', 'county', 'postcode', 'gender',
-                  'date_of_birth', 'bio']
+        fields = ['photo', 'full_name', 'registration_number',
+                  'address_line1', 'address_line2', 'town', 'county',
+                  'postcode', 'gender', 'date_of_birth', 'bio']
         widgets = {
             'full_name':           forms.TextInput(attrs={'class': 'form-control'}),
             'registration_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. BRA00123'}),
@@ -29,16 +34,32 @@ class ProfileForm(forms.ModelForm):
         }
 
 
-COMMITTEE_CHOICES_WITH_BLANK = [('', '— None —')] + User.COMMITTEE_CHOICES
+class ProfileMembershipForm(forms.ModelForm):
+    """Extended profile form for membership officers — includes date_joined_club."""
+    class Meta:
+        model = Profile
+        fields = ['photo', 'full_name', 'registration_number', 'date_joined_club',
+                  'address_line1', 'address_line2', 'town', 'county',
+                  'postcode', 'gender', 'date_of_birth', 'bio']
+        widgets = {
+            'full_name':           forms.TextInput(attrs={'class': 'form-control'}),
+            'registration_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. BRA00123'}),
+            'date_joined_club':    forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'address_line1':       forms.TextInput(attrs={'class': 'form-control'}),
+            'address_line2':       forms.TextInput(attrs={'class': 'form-control'}),
+            'town':                forms.TextInput(attrs={'class': 'form-control'}),
+            'county':              forms.TextInput(attrs={'class': 'form-control'}),
+            'postcode':            forms.TextInput(attrs={'class': 'form-control'}),
+            'gender':              forms.Select(attrs={'class': 'form-select'}),
+            'date_of_birth':       forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'bio':                 forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
 
 
 class UserRoleForm(forms.ModelForm):
-    """Admin-only: change role, committee role, basic info and active status."""
     committee_role = forms.ChoiceField(
-        choices=COMMITTEE_CHOICES_WITH_BLANK,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Committee role',
+        choices=COMMITTEE_CHOICES_WITH_BLANK, required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}), label='Committee role',
     )
 
     class Meta:
@@ -56,21 +77,14 @@ class UserRoleForm(forms.ModelForm):
 
 
 class UserCreateForm(forms.ModelForm):
-    """Admin-only: create a new user with password."""
     committee_role = forms.ChoiceField(
-        choices=COMMITTEE_CHOICES_WITH_BLANK,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Committee role',
+        choices=COMMITTEE_CHOICES_WITH_BLANK, required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}), label='Committee role',
     )
-    password1 = forms.CharField(
-        label='Password',
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}),
-    )
-    password2 = forms.CharField(
-        label='Confirm password',
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm password'}),
-    )
+    password1 = forms.CharField(label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
+    password2 = forms.CharField(label='Confirm password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm password'}))
 
     class Meta:
         model = User
@@ -109,3 +123,26 @@ class UserCreateForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class PasswordChangeAdminForm(forms.Form):
+    """Admin form to change any user's password."""
+    new_password1 = forms.CharField(
+        label='New password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'New password'}),
+    )
+    new_password2 = forms.CharField(
+        label='Confirm new password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm new password'}),
+    )
+
+    def clean_new_password2(self):
+        p1 = self.cleaned_data.get('new_password1', '')
+        p2 = self.cleaned_data.get('new_password2', '')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError('Passwords do not match.')
+        try:
+            validate_password(p1)
+        except forms.ValidationError as e:
+            raise forms.ValidationError(e)
+        return p2

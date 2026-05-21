@@ -68,6 +68,17 @@
         {% endif %}
     </div>
     <div class="stat-card">
+        <span class="stat-icon">📅</span>
+        {% if member_since %}
+        <div class="stat-value" style="font-size:1rem;">{{ member_since|date:"Y" }}</div>
+        <div class="stat-label">Member Since</div>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">{{ member_duration }}</div>
+        {% else %}
+        <div class="stat-value" style="font-size:1rem;">—</div>
+        <div class="stat-label">Member Since</div>
+        {% endif %}
+    </div>
+    <div class="stat-card">
         <span class="stat-icon">🏅</span>
         <div class="stat-value">{{ user.badges.count }}</div>
         <div class="stat-label">Badges Earned</div>
@@ -77,12 +88,35 @@
         <div class="stat-value">{{ user.scores.count }}</div>
         <div class="stat-label">Scores Logged</div>
     </div>
-    <div class="stat-card">
-        <span class="stat-icon">📅</span>
-        <div class="stat-value">{{ attending_events.count }}</div>
-        <div class="stat-label">Upcoming Events</div>
+    <div class="stat-card" style="cursor:pointer;" onclick="window.location='{% url 'chat' %}'">
+        <span class="stat-icon">🗨️</span>
+        {% if chat_unread > 0 %}
+        <div class="stat-value" style="color:var(--gold);">{{ chat_unread }}</div>
+        <div class="stat-label">Unread Messages</div>
+        <div style="margin-top:6px;"><a href="{% url 'chat' %}" class="btn btn-gold btn-sm">Open Chat</a></div>
+        {% else %}
+        <div class="stat-value" style="font-size:1.2rem;color:var(--text-muted);">—</div>
+        <div class="stat-label">Club Chat</div>
+        <div style="margin-top:6px;"><a href="{% url 'chat' %}" class="btn btn-outline btn-sm">Open</a></div>
+        {% endif %}
     </div>
 </div>
+
+<!-- ── MEMBERSHIP EXPIRY WARNING ── -->
+{% if expiry_warning is not None %}
+<div style="background:rgba(192,57,43,.1);border:1px solid var(--danger);border-left:4px solid var(--danger);border-radius:6px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:1.3rem;">⚠️</span>
+    <div style="flex:1;">
+        <div style="color:#e74c3c;font-weight:700;margin-bottom:2px;">
+            {% if expiry_warning == 0 %}Your membership expires today!
+            {% elif expiry_warning == 1 %}Your membership expires tomorrow!
+            {% else %}Your membership expires in {{ expiry_warning }} days.{% endif %}
+        </div>
+        <div style="font-size:.85rem;color:var(--text-muted);">Please contact the membership officer to renew before it lapses.</div>
+    </div>
+    <a href="{% url 'member_list' %}" class="btn btn-danger btn-sm">Contact Membership</a>
+</div>
+{% endif %}
 
 <!-- ── CHECK-IN REMINDER (for events attended but not checked in) ── -->
 {% if checkin_events %}
@@ -137,6 +171,34 @@
         {% endfor %}
     </div>
 </div>
+
+<!-- ── LATEST FORUM POST ── -->
+{% if latest_post %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+        💬 Latest Forum Activity
+        <a href="{% url 'topic_list' %}" class="btn btn-outline btn-sm">Forum</a>
+    </div>
+    <div style="display:flex;gap:14px;align-items:start;">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--gold-dark);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:var(--black);font-size:.85rem;flex-shrink:0;overflow:hidden;">
+            {% if latest_post.author.profile.photo %}<img src="{{ latest_post.author.profile.photo.url }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}{{ latest_post.author.first_name|first|upper }}{{ latest_post.author.last_name|first|upper }}{% endif %}
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:4px;">
+                <strong style="color:var(--white);">{{ latest_post.author.get_full_name|default:latest_post.author.username }}</strong>
+                posted in
+                <a href="{% url 'topic_detail' latest_post.topic.pk %}" style="color:var(--gold);text-decoration:none;font-weight:600;">{{ latest_post.topic.title }}</a>
+                · {{ latest_post.created_at|date:"j M Y, H:i" }}
+            </div>
+            <div style="font-size:.88rem;color:var(--text-muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+                {{ latest_post.body|truncatechars:200 }}
+            </div>
+            <a href="{% url 'topic_detail' latest_post.topic.pk %}" class="btn btn-outline btn-sm" style="margin-top:8px;">Read Thread</a>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- ── RECENT BADGES ── -->
 {% if recent_badges %}

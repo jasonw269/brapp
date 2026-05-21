@@ -292,6 +292,12 @@
         <div class="nav-section">Club</div>
         <a href="{% url 'event_list' %}"    class="nav-link"><span class="nav-icon">📅</span> Events</a>
         <a href="{% url 'topic_list' %}"    class="nav-link"><span class="nav-icon">💬</span> Forum</a>
+        <a href="{% url 'chat' %}"          class="nav-link" style="justify-content:space-between;">
+            <span><span class="nav-icon">🗨️</span> Club Chat</span>
+            {% if chat_unread_count > 0 %}
+            <span style="background:var(--gold);color:var(--black);font-size:.65rem;font-weight:900;border-radius:10px;padding:1px 7px;font-family:'Lato',sans-serif;min-width:18px;text-align:center;">{{ chat_unread_count }}</span>
+            {% endif %}
+        </a>
         <a href="{% url 'badge_list' %}"    class="nav-link"><span class="nav-icon">🏅</span> Badges</a>
         {% endif %}
 

@@ -15,5 +15,6 @@ urlpatterns = [
     path('forum/', include('forum.urls')),
     path('badges/', include('badges.urls')),
     path('courses/', include('courses.urls')),
+    path('chat/',    include('chat.urls')),
     path('', include('pages.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

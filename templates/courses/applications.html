@@ -1,38 +1,127 @@
 {% extends 'base.html' %}
-{% block title %}Applications{% endblock %}
+{% block title %}Applications — {{ course.title }}{% endblock %}
 {% block page_title %}Applications: {{ course.title }}{% endblock %}
 {% block topbar_actions %}
 <a href="{% url 'course_manage' %}" class="btn btn-outline btn-sm">← Manage Courses</a>
 {% endblock %}
+
 {% block content %}
-<div class="card">
-    <div class="card-header">Applications ({{ applications.count }})</div>
-    {% for app in applications %}
-    <div style="padding:16px 0;border-bottom:1px solid var(--dark3);">
-        <div style="display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-            <div>
-                <div style="font-weight:700;font-size:1rem;">{{ app.full_name }}</div>
-                <div style="font-size:.85rem;color:var(--text-muted);">📧 {{ app.email }} {% if app.phone %}| 📞 {{ app.phone }}{% endif %}</div>
-                {% if app.experience %}<div style="font-size:.85rem;margin-top:6px;color:var(--white);">Experience: {{ app.experience }}</div>{% endif %}
-                <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">Applied {{ app.applied_at|date:"j M Y H:i" }}</div>
+<!-- Course stats bar -->
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+    <div style="background:var(--dark);border:1px solid var(--dark3);border-radius:6px;padding:12px 20px;border-top:3px solid var(--gold);">
+        <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);">{{ course.confirmed_count }}/{{ course.max_participants }}</div>
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Confirmed Places</div>
+    </div>
+    <div style="background:var(--dark);border:1px solid var(--dark3);border-radius:6px;padding:12px 20px;border-top:3px solid {% if course.spaces_remaining == 0 %}var(--danger){% else %}var(--success){% endif %};">
+        <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:{% if course.spaces_remaining == 0 %}var(--danger){% else %}var(--success){% endif %};">{{ course.spaces_remaining }}</div>
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Spaces Remaining</div>
+    </div>
+    <div style="background:var(--dark);border:1px solid var(--dark3);border-radius:6px;padding:12px 20px;">
+        <div style="font-family:'Cinzel',serif;font-size:1.4rem;color:var(--white);">{{ applications.count }}</div>
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);">Total Applications</div>
+    </div>
+</div>
+
+{% for app in applications %}
+<div class="card" style="margin-bottom:14px;{% if app.status == 'confirmed' %}border-left:4px solid var(--success);{% elif app.status == 'accepted' or app.status == 'details' %}border-left:4px solid var(--gold);{% elif app.status == 'rejected' %}border-left:4px solid var(--danger);{% endif %}">
+    <div style="display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <!-- Applicant info -->
+        <div style="flex:1;min-width:220px;">
+            <div style="font-weight:700;font-size:1rem;margin-bottom:3px;">{{ app.full_name }}</div>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:6px;">
+                📧 <a href="mailto:{{ app.email }}" style="color:var(--text-muted);text-decoration:none;">{{ app.email }}</a>
+                {% if app.phone %} · 📞 {{ app.phone }}{% endif %}
             </div>
-            <div>
-                <span class="badge-pill {% if app.status == 'accepted' %}badge-success{% elif app.status == 'rejected' %}badge-danger{% elif app.status == 'waitlist' %}badge-info{% else %}badge-muted{% endif %}">{{ app.get_status_display }}</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="badge-pill
+                    {% if app.status == 'confirmed' %}badge-success
+                    {% elif app.status == 'rejected' %}badge-danger
+                    {% elif app.status == 'accepted' or app.status == 'details' %}badge-gold
+                    {% elif app.status == 'waitlist' %}badge-info
+                    {% else %}badge-muted{% endif %}">
+                    {{ app.get_status_display }}
+                </span>
+                {% if app.acceptance_email_sent %}
+                <span class="badge-pill badge-muted" title="Email sent {{ app.acceptance_email_sent|date:'j M Y H:i' }}">📧 Email sent</span>
+                {% endif %}
+                {% if app.details_complete %}
+                <span class="badge-pill badge-info">📋 Details received</span>
+                {% endif %}
+                {% if app.payment_confirmed %}
+                <span class="badge-pill badge-success">💳 Paid</span>
+                {% endif %}
             </div>
         </div>
-        <form method="post" action="{% url 'application_update' app.pk %}" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+
+        <!-- Applied date -->
+        <div style="font-size:.75rem;color:var(--text-muted);white-space:nowrap;">
+            Applied {{ app.applied_at|date:"j M Y" }}
+        </div>
+    </div>
+
+    <!-- Applicant details (if submitted) -->
+    {% if app.details_complete %}
+    <div style="margin-top:12px;padding:12px 14px;background:var(--dark2);border-radius:6px;border:1px solid var(--dark3);">
+        <div style="font-size:.72rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Submitted Details</div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:.84rem;">
+            <span style="color:var(--text-muted);">DOB: <strong style="color:var(--white);">{{ app.date_of_birth|date:"j M Y" }}</strong></span>
+            <span style="color:var(--text-muted);">Eye: <strong style="color:var(--white);">{{ app.get_eye_dominance_display }}</strong></span>
+            <span style="color:var(--text-muted);">Draw hand: <strong style="color:var(--white);">{{ app.get_handedness_display }}</strong></span>
+            <span style="color:var(--text-muted);">Strength: <strong style="color:var(--white);">{{ app.get_strength_display }}</strong></span>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if app.experience %}
+    <div style="margin-top:8px;font-size:.84rem;color:var(--text-muted);">Experience: {{ app.experience }}</div>
+    {% endif %}
+
+    <!-- Admin actions -->
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+
+        {% if app.status not in 'confirmed,rejected' %}
+        <!-- Status change form -->
+        <form method="post" action="{% url 'application_update' app.pk %}" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             {% csrf_token %}
-            <select name="status" class="form-select" style="width:auto;">
+            <select name="status" class="form-select" style="width:auto;font-size:.82rem;padding:6px 10px;">
                 {% for val, label in app.STATUS_CHOICES %}
+                {% if val != 'confirmed' %}
                 <option value="{{ val }}" {% if app.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endif %}
                 {% endfor %}
             </select>
-            <input type="text" name="admin_notes" class="form-control" style="width:auto;flex:1;" placeholder="Admin notes..." value="{{ app.admin_notes }}">
+            <input type="text" name="admin_notes" class="form-control" style="width:auto;flex:1;min-width:140px;font-size:.82rem;padding:6px 10px;" placeholder="Admin notes…" value="{{ app.admin_notes }}">
             <button type="submit" class="btn btn-gold btn-sm">Update</button>
         </form>
+        {% endif %}
+
+        <!-- Resend email -->
+        {% if app.status in 'accepted,details' %}
+        <form method="post" action="{% url 'resend_acceptance_email' app.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline btn-sm" title="Resend acceptance email with detail form link">📧 Resend Email</button>
+        </form>
+        {% endif %}
+
+        <!-- Confirm payment -->
+        {% if app.status == 'details' and can_confirm_payment and not app.payment_confirmed %}
+        <form method="post" action="{% url 'confirm_payment' app.pk %}" onsubmit="return confirm('Confirm payment and place for {{ app.full_name }}?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-gold btn-sm">💳 Confirm Payment & Place</button>
+        </form>
+        {% endif %}
+
+        {% if app.status == 'confirmed' %}
+        <div style="font-size:.78rem;color:var(--text-muted);">
+            Confirmed by {{ app.payment_confirmed_by.get_full_name|default:app.payment_confirmed_by.username }}
+            on {{ app.payment_confirmed_at|date:"j M Y" }}
+        </div>
+        {% endif %}
     </div>
-    {% empty %}
-    <p style="color:var(--text-muted);">No applications yet.</p>
-    {% endfor %}
 </div>
+{% empty %}
+<div class="card" style="text-align:center;padding:40px;">
+    <p style="color:var(--text-muted);">No applications yet.</p>
+</div>
+{% endfor %}
 {% endblock %}

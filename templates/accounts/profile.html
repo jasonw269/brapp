@@ -7,8 +7,10 @@
 {% endif %}
 {% if request.user.is_admin %}
 <a href="{% url 'user_role_edit' profile_user.pk %}" class="btn btn-gold btn-sm">🔑 Edit Roles</a>
+<a href="{% url 'user_password_change' profile_user.pk %}" class="btn btn-outline btn-sm">🔒 Change Password</a>
 {% endif %}
 {% if request.user.is_admin or request.user.committee_role in 'Chair,Treasurer,Secretary,Member,Records' %}
+<a href="{% url 'profile_edit_other' profile_user.pk %}" class="btn btn-outline btn-sm">✏️ Edit Profile</a>
 <a href="{% url 'membership_create_for' profile_user.pk %}" class="btn btn-outline btn-sm">+ Membership</a>
 {% endif %}
 {% if request.user.is_records_or_admin %}
@@ -33,6 +35,9 @@
                 </div>
                 {% if profile.registration_number %}
                 <div style="font-size:.78rem;color:var(--text-muted);margin-top:8px;">Reg No: {{ profile.registration_number }}</div>
+                {% endif %}
+                {% if profile.date_joined_club %}
+                <div style="font-size:.78rem;color:var(--text-muted);margin-top:4px;">Member since {{ profile.date_joined_club|date:"j M Y" }}</div>
                 {% endif %}
             </div>
             {% if profile.bio %}
@@ -72,6 +77,7 @@
             <table class="table">
                 <tr><td style="color:var(--text-muted);width:40%;">Email</td><td>{{ profile_user.email|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Reg Number</td><td>{{ profile.registration_number|default:'—' }}</td></tr>
+                <tr><td style="color:var(--text-muted);">Member Since</td><td>{{ profile.date_joined_club|date:"j M Y"|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Gender</td><td>{{ profile.get_gender_display|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Date of Birth</td><td>{{ profile.date_of_birth|default:'—' }}</td></tr>
                 <tr><td style="color:var(--text-muted);">Address</td>

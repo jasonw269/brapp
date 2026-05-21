@@ -1,0 +1,19 @@
+Hello {{ app.first_name }},
+
+Great news! Your application for {{ app.course.title }} has been accepted.
+
+The course starts on {{ app.course.start_date }}.
+{% if app.course.price > 0 %}The course fee is £{{ app.course.price }}.{% endif %}
+
+Please click the link below to provide a few details so we can prepare the right equipment for you:
+
+{{ token_url }}
+
+This link is unique to you — please do not share it. Once you have submitted your details, we will be in touch with payment instructions.
+
+If you have any questions, please reply to this email or visit:
+{{ base_url }}/contact/
+
+We look forward to welcoming you to Beeston Rylands Archers!
+
+The BRA Team
