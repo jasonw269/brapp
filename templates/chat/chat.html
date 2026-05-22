@@ -2,6 +2,9 @@
 {% block title %}Club Chat{% endblock %}
 {% block page_title %}Club Chat{% endblock %}
 
+{# Suppress the standard flash messages bar — chat has its own layout #}
+{% block messages %}{% endblock %}
+
 {% block extra_css %}
 <style>
     /* Override content padding so chat fills height */
